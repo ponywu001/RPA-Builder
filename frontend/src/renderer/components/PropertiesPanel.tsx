@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react'
 import { Template } from '../types'
 import { api } from '../services/api'
+import PositionPicker from './PositionPicker'
 
 interface PropertiesPanelProps {
   selectedBlock: any
@@ -17,20 +18,30 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   templates,
   onUpdate,
 }) => {
-  const [params, setParams] = useState<Record<string, any>>({})
+  const [values, setValues] = useState<Record<string, any>>({})
+  const [showPositionPicker, setShowPositionPicker] = useState(false)
 
   useEffect(() => {
     if (selectedBlock) {
-      setParams(selectedBlock.params || {})
+      // 使用 values（實際欄位值）而不是 params（參數定義）
+      setValues(selectedBlock.values || {})
     } else {
-      setParams({})
+      setValues({})
     }
   }, [selectedBlock])
 
   const handleChange = (key: string, value: any) => {
-    const newParams = { ...params, [key]: value }
-    setParams(newParams)
-    onUpdate(newParams)
+    const newValues = { ...values, [key]: value }
+    setValues(newValues)
+    onUpdate(newValues)
+  }
+
+  // 處理位置選取
+  const handlePositionPick = (x: number, y: number) => {
+    setShowPositionPicker(false)
+    const newValues = { ...values, X: x, Y: y }
+    setValues(newValues)
+    onUpdate(newValues)
   }
 
   if (!selectedBlock) {
@@ -62,12 +73,31 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
       {/* 參數編輯區 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* 座標選取按鈕（僅用於 click_position） */}
+        {selectedBlock.id === 'click_position' && (
+          <div>
+            <button
+              onClick={() => setShowPositionPicker(true)}
+              className="btn btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              在畫面上選取位置
+            </button>
+            <p className="text-xs text-surface-500 mt-1 text-center">
+              點擊後在螢幕上選取座標
+            </p>
+          </div>
+        )}
+
         {Object.entries(selectedBlock.params || {}).map(([key, paramDef]: [string, any]) => (
           <ParamField
             key={key}
             name={key}
             definition={paramDef}
-            value={params[key]}
+            value={values[key]}
             templates={templates}
             onChange={(value) => handleChange(key, value)}
           />
@@ -79,6 +109,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </p>
         )}
       </div>
+
+      {/* 位置選取器 */}
+      {showPositionPicker && (
+        <PositionPicker
+          onPick={handlePositionPick}
+          onCancel={() => setShowPositionPicker(false)}
+        />
+      )}
     </aside>
   )
 }

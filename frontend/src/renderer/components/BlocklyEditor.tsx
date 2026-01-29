@@ -11,12 +11,14 @@ interface BlocklyEditorProps {
   script: Script | null
   onSave: (blocks: any[]) => void
   onBlockSelect: (block: any) => void
+  onWorkspaceReady?: (updateBlock: (instanceId: string, fieldValues: Record<string, any>) => void) => void
 }
 
 const BlocklyEditor: React.FC<BlocklyEditorProps> = ({
   script,
   onSave,
   onBlockSelect,
+  onWorkspaceReady,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
@@ -152,6 +154,24 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({
     })
 
     setIsInitialized(true)
+
+    // 提供更新 block 欄位的方法
+    if (onWorkspaceReady) {
+      onWorkspaceReady((instanceId: string, fieldValues: Record<string, any>) => {
+        if (!workspaceRef.current) return
+        
+        const block = workspaceRef.current.getBlockById(instanceId)
+        if (!block) return
+        
+        // 更新每個欄位
+        Object.entries(fieldValues).forEach(([fieldName, value]) => {
+          const field = block.getField(fieldName)
+          if (field) {
+            field.setValue(value)
+          }
+        })
+      })
+    }
 
     return () => {
       if (workspaceRef.current) {

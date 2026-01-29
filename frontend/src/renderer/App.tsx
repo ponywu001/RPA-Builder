@@ -22,6 +22,9 @@ const App: React.FC = () => {
   const [logs, setLogs] = useState<Array<{ timestamp: string; level: string; message: string }>>([])
   const [templates, setTemplates] = useState<Template[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Block 更新函數（由 BlocklyEditor 提供）
+  const [updateBlockFn, setUpdateBlockFn] = useState<((instanceId: string, fieldValues: Record<string, any>) => void) | null>(null)
 
   // 初始化
   useEffect(() => {
@@ -283,6 +286,7 @@ const App: React.FC = () => {
               script={currentScript}
               onSave={handleSaveScript}
               onBlockSelect={handleBlockSelect}
+              onWorkspaceReady={(updateFn) => setUpdateBlockFn(() => updateFn)}
             />
           </div>
 
@@ -297,9 +301,11 @@ const App: React.FC = () => {
         <PropertiesPanel
           selectedBlock={selectedBlock}
           templates={templates}
-          onUpdate={(params) => {
-            // 更新 block 參數
-            console.log('更新參數:', params)
+          onUpdate={(fieldValues) => {
+            // 更新 Blockly 積木的欄位值
+            if (selectedBlock && updateBlockFn) {
+              updateBlockFn(selectedBlock.instance_id, fieldValues)
+            }
           }}
         />
       </div>
