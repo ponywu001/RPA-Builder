@@ -17,7 +17,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -51,6 +53,13 @@ body {
 }
 
 /* Blockly 自定義樣式 */
+/* 關閉工具箱/flyout 後 scrollbar 殘留：Blockly 以 setAttribute("display","none") 隱藏
+   scrollbar SVG，外部 CSS（如 Tailwind preflight 的 svg { display: block }）會覆寫，
+   需強制尊重 attribute 以隱藏殘留的 scrollbar。參考：Blockly 社群 / react-blockly #75 */
+svg[display='none'] {
+  display: none !important;
+}
+
 .blocklySvg {
   background: transparent !important;
 }
@@ -165,25 +174,24 @@ body {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
 
 .shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--color-surface) 25%,
-    var(--color-surface-light) 50%,
-    var(--color-surface) 75%
-  );
+  background: linear-gradient(90deg,
+      var(--color-surface) 25%,
+      var(--color-surface-light) 50%,
+      var(--color-surface) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
 /* 網格背景 */
 .grid-bg {
-  background-image: 
+  background-image:
     linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
@@ -201,11 +209,11 @@ body {
   padding: 1px;
   border-radius: inherit;
   background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
