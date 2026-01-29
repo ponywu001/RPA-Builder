@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./scripts:/app/scripts
+      - ./images:/app/images
+      - ./logs:/app/logs
+      - rpa_db:/app/data
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DATABASE_URL=sqlite+aiosqlite:///./data/rpa_builder.db
+      - DEBUG=false
+    restart: unless-stopped
+
+volumes:
+  rpa_db:

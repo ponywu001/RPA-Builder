@@ -1,0 +1,29 @@
+# FastAPI 後端框架
+fastapi>=0.109.2
+uvicorn[standard]>=0.27.1
+python-multipart>=0.0.9
+
+# 桌面控制
+pyautogui>=0.9.54
+pyperclip>=1.8.2
+
+# 圖像辨識
+opencv-python>=4.9.0.80
+numpy>=1.26.4
+Pillow>=10.4.0
+mss>=9.0.1
+
+# 資料庫
+sqlalchemy>=2.0.25
+aiosqlite>=0.19.0
+
+# 工具
+pydantic>=2.6.1
+pydantic-settings>=2.1.0
+python-dateutil>=2.8.2
+aiofiles>=23.2.1
+
+# 開發與測試
+pytest>=8.0.0
+pytest-asyncio>=0.23.4
+httpx>=0.26.0

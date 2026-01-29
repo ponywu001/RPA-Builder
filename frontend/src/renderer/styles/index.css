@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 基礎樣式 */
+:root {
+  --color-bg: #020617;
+  --color-surface: #0f172a;
+  --color-surface-light: #1e293b;
+  --color-primary: #0ea5e9;
+  --color-accent: #d946ef;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  background: var(--color-bg);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+/* 滾動條樣式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Blockly 自定義樣式 */
+.blocklySvg {
+  background: transparent !important;
+}
+
+.blocklyMainBackground {
+  fill: transparent !important;
+}
+
+.blocklyToolboxDiv {
+  background: var(--color-surface) !important;
+  border-right: 1px solid var(--color-surface-light) !important;
+}
+
+.blocklyTreeLabel {
+  color: var(--color-text) !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+}
+
+.blocklyTreeSelected .blocklyTreeLabel {
+  color: var(--color-primary) !important;
+}
+
+.blocklyFlyoutBackground {
+  fill: var(--color-surface) !important;
+  fill-opacity: 0.95 !important;
+}
+
+/* 按鈕樣式 */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface-950;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-500;
+    @apply focus:ring-primary-500;
+  }
+
+  .btn-secondary {
+    @apply bg-surface-700 text-surface-100 hover:bg-surface-600;
+    @apply focus:ring-surface-500;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-500;
+    @apply focus:ring-red-500;
+  }
+
+  .btn-success {
+    @apply bg-emerald-600 text-white hover:bg-emerald-500;
+    @apply focus:ring-emerald-500;
+  }
+
+  .btn-icon {
+    @apply p-2 rounded-lg transition-colors;
+    @apply hover:bg-surface-700;
+  }
+
+  /* 輸入框樣式 */
+  .input {
+    @apply w-full px-3 py-2 rounded-lg;
+    @apply bg-surface-800 border border-surface-600;
+    @apply text-surface-100 placeholder-surface-500;
+    @apply focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500;
+    @apply transition-colors duration-200;
+  }
+
+  /* 面板樣式 */
+  .panel {
+    @apply bg-surface-900 rounded-xl border border-surface-700;
+    @apply shadow-xl shadow-black/20;
+  }
+
+  .panel-header {
+    @apply px-4 py-3 border-b border-surface-700;
+    @apply font-display font-semibold text-surface-200;
+  }
+
+  .panel-body {
+    @apply p-4;
+  }
+
+  /* 日誌樣式 */
+  .log-entry {
+    @apply py-1 px-2 font-mono text-sm;
+  }
+
+  .log-info {
+    @apply text-surface-300;
+  }
+
+  .log-warning {
+    @apply text-amber-400;
+  }
+
+  .log-error {
+    @apply text-red-400;
+  }
+
+  .log-debug {
+    @apply text-surface-500;
+  }
+
+  .log-timestamp {
+    @apply text-surface-500 mr-2;
+  }
+}
+
+/* 動畫 */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-surface-light) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* 網格背景 */
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 漸層邊框 */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
