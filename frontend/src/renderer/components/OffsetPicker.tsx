@@ -1,61 +1,106 @@
 /**
- * 位置選取元件 - 在螢幕上點選位置取得座標
+ * 偏移選取元件 - 選取相對於圖片中心的偏移位置
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 
-interface PositionPickerProps {
-  onPick: (x: number, y: number) => void
+interface OffsetPickerProps {
+  imagePath: string  // 圖片路徑（用於在螢幕上找到圖片）
+  onPick: (offsetX: number, offsetY: number) => void
   onCancel: () => void
 }
 
-// 放大鏡設定
-const MAGNIFIER_SIZE = 150  // 放大鏡大小
-const ZOOM_LEVEL = 4        // 放大倍率
+interface ImagePosition {
+  x: number
+  y: number
+  width: number
+  height: number
+  confidence: number
+}
 
-const PositionPicker: React.FC<PositionPickerProps> = ({
+const OffsetPicker: React.FC<OffsetPickerProps> = ({
+  imagePath,
   onPick,
   onCancel,
 }) => {
   const [screenshot, setScreenshot] = useState<string | null>(null)
   const [screenshotImg, setScreenshotImg] = useState<HTMLImageElement | null>(null)
+  const [imagePosition, setImagePosition] = useState<ImagePosition | null>(null)
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const magnifierRef = useRef<HTMLCanvasElement>(null)
+  
+  // 放大鏡設定
+  const MAGNIFIER_SIZE = 150  // 放大鏡大小
+  const ZOOM_LEVEL = 4        // 放大倍率
 
-  // 載入螢幕截圖
+  // 載入螢幕截圖並尋找圖片
   useEffect(() => {
-    const loadScreenshot = async () => {
+    const loadScreenshotAndFindImage = async () => {
       try {
-        // 優先使用 Electron API
+        setLoading(true)
+        
+        // 先最小化視窗，避免擋住目標圖片
         if (window.electronAPI) {
-          const dataUrl = await window.electronAPI.captureScreen()
-          if (dataUrl) {
-            setScreenshot(dataUrl)
-            return
+          window.electronAPI.minimizeWindow()
+          // 等待視窗最小化動畫
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+        
+        // 1. 尋找圖片位置（在擷取螢幕之前，確保能找到圖片）
+        const findResponse = await fetch(`/api/capture/find?image_path=${encodeURIComponent(imagePath)}`)
+        
+        let position = null
+        if (findResponse.ok) {
+          position = await findResponse.json()
+        }
+        
+        // 2. 擷取螢幕
+        let screenshotData: string | null = null
+        
+        if (window.electronAPI) {
+          screenshotData = await window.electronAPI.captureScreen()
+        } else {
+          const response = await fetch('/api/capture/screen')
+          if (response.ok) {
+            const blob = await response.blob()
+            screenshotData = await blobToDataUrl(blob)
           }
         }
         
-        // 備用：使用後端 API
-        const response = await fetch('/api/capture/screen')
-        if (response.ok) {
-          const blob = await response.blob()
-          const dataUrl = await blobToDataUrl(blob)
-          setScreenshot(dataUrl)
-        } else {
+        // 恢復視窗（不需要，因為 OffsetPicker 會覆蓋整個螢幕）
+        
+        if (!screenshotData) {
+          if (window.electronAPI) {
+            window.electronAPI.restoreWindow()
+          }
           throw new Error('無法擷取螢幕')
         }
+        
+        setScreenshot(screenshotData)
+        
+        if (position) {
+          setImagePosition(position)
+        } else {
+          setError(`螢幕上找不到圖片: ${imagePath}\n請確保圖片在目前螢幕上可見`)
+        }
+        
       } catch (err) {
-        console.error('截圖失敗:', err)
-        setError('截圖功能需要後端服務運行中')
-        setTimeout(onCancel, 2000)
+        console.error('載入失敗:', err)
+        setError('載入失敗，請確認後端服務運行中')
+        if (window.electronAPI) {
+          window.electronAPI.restoreWindow()
+        }
+      } finally {
+        setLoading(false)
       }
     }
 
-    loadScreenshot()
-  }, [onCancel])
+    loadScreenshotAndFindImage()
+  }, [imagePath])
 
   // Blob 轉 Data URL
   const blobToDataUrl = (blob: Blob): Promise<string> => {
@@ -89,79 +134,91 @@ const PositionPicker: React.FC<PositionPickerProps> = ({
     canvas.width = screenshotImg.width
     canvas.height = screenshotImg.height
 
-    // 繪製原圖
+    // 繪製原圖（稍微變暗）
     ctx.drawImage(screenshotImg, 0, 0)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // 繪製十字準心
-    if (mousePos) {
-      const { x, y } = mousePos
+    // 繪製找到的圖片位置
+    if (imagePosition) {
+      const imgX = imagePosition.x - imagePosition.width / 2
+      const imgY = imagePosition.y - imagePosition.height / 2
       
-      // 半透明遮罩
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      
-      // 清除十字區域
-      ctx.clearRect(x - 1, 0, 2, canvas.height)
-      ctx.clearRect(0, y - 1, canvas.width, 2)
-      ctx.drawImage(screenshotImg, x - 1, 0, 2, canvas.height, x - 1, 0, 2, canvas.height)
-      ctx.drawImage(screenshotImg, 0, y - 1, canvas.width, 2, 0, y - 1, canvas.width, 2)
-      
-      // 繪製十字線
-      ctx.strokeStyle = '#0ea5e9'
-      ctx.lineWidth = 1
-      ctx.setLineDash([5, 5])
-      
-      // 垂直線
+      // 高亮圖片區域
+      ctx.save()
       ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, canvas.height)
-      ctx.stroke()
+      ctx.rect(imgX, imgY, imagePosition.width, imagePosition.height)
+      ctx.clip()
+      ctx.drawImage(screenshotImg, 0, 0)
+      ctx.restore()
       
-      // 水平線
+      // 繪製圖片邊框
+      ctx.strokeStyle = '#22c55e'
+      ctx.lineWidth = 3
+      ctx.strokeRect(imgX, imgY, imagePosition.width, imagePosition.height)
+      
+      // 繪製圖片中心點
+      ctx.fillStyle = '#22c55e'
       ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
-      ctx.stroke()
-      
-      ctx.setLineDash([])
-      
-      // 繪製中心點
-      ctx.fillStyle = '#0ea5e9'
-      ctx.beginPath()
-      ctx.arc(x, y, 6, 0, Math.PI * 2)
+      ctx.arc(imagePosition.x, imagePosition.y, 8, 0, Math.PI * 2)
       ctx.fill()
-      
       ctx.fillStyle = '#fff'
       ctx.beginPath()
-      ctx.arc(x, y, 3, 0, Math.PI * 2)
+      ctx.arc(imagePosition.x, imagePosition.y, 4, 0, Math.PI * 2)
+      ctx.fill()
+      
+      // 標註「圖片中心」
+      ctx.font = 'bold 12px JetBrains Mono'
+      ctx.fillStyle = '#22c55e'
+      ctx.fillText('圖片中心', imagePosition.x + 12, imagePosition.y + 4)
+    }
+
+    // 繪製滑鼠位置和偏移線
+    if (mousePos && imagePosition) {
+      const offsetX = mousePos.x - imagePosition.x
+      const offsetY = mousePos.y - imagePosition.y
+      
+      // 繪製從圖片中心到滑鼠位置的線
+      ctx.strokeStyle = '#0ea5e9'
+      ctx.lineWidth = 2
+      ctx.setLineDash([5, 5])
+      ctx.beginPath()
+      ctx.moveTo(imagePosition.x, imagePosition.y)
+      ctx.lineTo(mousePos.x, mousePos.y)
+      ctx.stroke()
+      ctx.setLineDash([])
+      
+      // 繪製滑鼠位置點
+      ctx.fillStyle = '#0ea5e9'
+      ctx.beginPath()
+      ctx.arc(mousePos.x, mousePos.y, 6, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#fff'
+      ctx.beginPath()
+      ctx.arc(mousePos.x, mousePos.y, 3, 0, Math.PI * 2)
       ctx.fill()
 
-      // 繪製座標資訊
-      const text = `(${x}, ${y})`
+      // 繪製偏移資訊
+      const text = `偏移: (${offsetX >= 0 ? '+' : ''}${offsetX}, ${offsetY >= 0 ? '+' : ''}${offsetY})`
       ctx.font = 'bold 14px JetBrains Mono'
       const textWidth = ctx.measureText(text).width
       
-      // 座標標籤位置
-      let labelX = x + 15
-      let labelY = y - 15
+      let labelX = mousePos.x + 15
+      let labelY = mousePos.y - 15
       
-      // 確保標籤在螢幕內
       if (labelX + textWidth + 10 > canvas.width) {
-        labelX = x - textWidth - 25
+        labelX = mousePos.x - textWidth - 25
       }
       if (labelY < 30) {
-        labelY = y + 30
+        labelY = mousePos.y + 30
       }
       
-      // 標籤背景
       ctx.fillStyle = '#0ea5e9'
       ctx.fillRect(labelX - 5, labelY - 18, textWidth + 10, 24)
-      
-      // 標籤文字
       ctx.fillStyle = '#fff'
       ctx.fillText(text, labelX, labelY)
     }
-  }, [screenshotImg, mousePos])
+  }, [screenshotImg, imagePosition, mousePos])
 
   // 繪製放大鏡
   useEffect(() => {
@@ -253,6 +310,8 @@ const PositionPicker: React.FC<PositionPickerProps> = ({
 
   // 點擊選取
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!imagePosition) return
+    
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -263,8 +322,11 @@ const PositionPicker: React.FC<PositionPickerProps> = ({
     const x = Math.round((e.clientX - rect.left) * scaleX)
     const y = Math.round((e.clientY - rect.top) * scaleY)
 
-    onPick(x, y)
-  }, [onPick])
+    const offsetX = x - imagePosition.x
+    const offsetY = y - imagePosition.y
+
+    onPick(offsetX, offsetY)
+  }, [imagePosition, onPick])
 
   // 鍵盤事件
   useEffect(() => {
@@ -277,6 +339,36 @@ const PositionPicker: React.FC<PositionPickerProps> = ({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onCancel])
+
+  // 載入中
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-[9999]">
+        <div className="text-white text-center">
+          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p>正在擷取螢幕並尋找圖片...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 錯誤狀態
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-[9999]">
+        <div className="text-center">
+          <div className="text-red-400 text-xl mb-2">⚠</div>
+          <p className="text-white mb-4">{error}</p>
+          <button
+            onClick={onCancel}
+            className="btn btn-secondary"
+          >
+            關閉
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // 計算放大鏡位置（避免超出螢幕邊界）
   const getMagnifierPosition = () => {
@@ -310,30 +402,6 @@ const PositionPicker: React.FC<PositionPickerProps> = ({
     top = Math.max(10, top)
     
     return { left, top }
-  }
-
-  // 錯誤狀態
-  if (error) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-[9999]">
-        <div className="text-center">
-          <div className="text-red-400 text-xl mb-2">⚠</div>
-          <p className="text-white">{error}</p>
-        </div>
-      </div>
-    )
-  }
-
-  // 載入中
-  if (!screenshot) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-[9999]">
-        <div className="text-white text-center">
-          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p>擷取螢幕中...</p>
-        </div>
-      </div>
-    )
   }
 
   const magnifierPos = getMagnifierPosition()
@@ -375,17 +443,18 @@ const PositionPicker: React.FC<PositionPickerProps> = ({
 
       {/* 說明文字 */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-surface-900/90 rounded-lg text-sm text-surface-300">
-        點擊螢幕選取座標 · 按 ESC 取消
+        <span className="text-green-400">綠點</span> = 圖片中心 · 
+        點擊選取偏移位置 · 按 ESC 取消
       </div>
 
-      {/* 當前座標顯示 */}
-      {mousePos && (
+      {/* 當前偏移顯示 */}
+      {mousePos && imagePosition && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-primary-500 rounded-lg text-white font-mono">
-          X: {mousePos.x} · Y: {mousePos.y}
+          偏移 X: {mousePos.x - imagePosition.x} · Y: {mousePos.y - imagePosition.y}
         </div>
       )}
     </div>
   )
 }
 
-export default PositionPicker
+export default OffsetPicker

@@ -6,20 +6,28 @@ import React, { useState, useEffect } from 'react'
 import { Template } from '../types'
 import { api } from '../services/api'
 import PositionPicker from './PositionPicker'
+import OffsetPicker from './OffsetPicker'
 
 interface PropertiesPanelProps {
   selectedBlock: any
   templates: Template[]
   onUpdate: (params: Record<string, any>) => void
+  /** 開始截圖回調 (enableOffsetPick, targetBlockInstanceId) */
+  onStartCapture?: (enableOffsetPick: boolean, targetBlockInstanceId?: string) => void
 }
+
+// 支援偏移選取的 block 類型
+const OFFSET_ENABLED_BLOCKS = ['click_image', 'double_click_image', 'right_click_image', 'drag_drop']
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   selectedBlock,
   templates,
   onUpdate,
+  onStartCapture,
 }) => {
   const [values, setValues] = useState<Record<string, any>>({})
   const [showPositionPicker, setShowPositionPicker] = useState(false)
+  const [showOffsetPicker, setShowOffsetPicker] = useState(false)
 
   useEffect(() => {
     if (selectedBlock) {
@@ -44,14 +52,40 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     onUpdate(newValues)
   }
 
+  // 處理偏移選取
+  const handleOffsetPick = (offsetX: number, offsetY: number) => {
+    setShowOffsetPicker(false)
+    const newValues = { ...values, OFFSET_X: offsetX, OFFSET_Y: offsetY }
+    setValues(newValues)
+    onUpdate(newValues)
+    // 恢復視窗
+    if (window.electronAPI) {
+      window.electronAPI.restoreWindow()
+    }
+  }
+
+  // 面板樣式
+  const panelStyle: React.CSSProperties = {
+    background: 'linear-gradient(180deg, #0f172a, #1e293b)',
+    borderLeft: '1px solid rgba(71, 85, 105, 0.5)',
+    boxShadow: '-2px 0 20px rgba(0, 0, 0, 0.15)'
+  }
+
+  const headerStyle: React.CSSProperties = {
+    borderBottom: '1px solid rgba(71, 85, 105, 0.5)',
+    background: 'rgba(255, 255, 255, 0.02)'
+  }
+
   if (!selectedBlock) {
     return (
-      <aside className="w-72 bg-surface-900 border-l border-surface-700 flex flex-col">
-        <div className="p-4 border-b border-surface-700">
-          <h2 className="font-display font-semibold text-surface-200">屬性面板</h2>
+      <aside className="w-72 flex flex-col" style={panelStyle}>
+        <div className="p-4" style={headerStyle}>
+          <h2 className="font-semibold" style={{ color: '#f1f5f9' }}>
+            屬性面板
+          </h2>
         </div>
         <div className="flex-1 flex items-center justify-center p-4">
-          <p className="text-surface-500 text-sm text-center">
+          <p className="text-sm text-center" style={{ color: '#64748b' }}>
             選擇一個 Block<br />來編輯其屬性
           </p>
         </div>
@@ -60,13 +94,13 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   }
 
   return (
-    <aside className="w-72 bg-surface-900 border-l border-surface-700 flex flex-col">
+    <aside className="w-72 flex flex-col" style={panelStyle}>
       {/* 標題 */}
-      <div className="p-4 border-b border-surface-700">
-        <h2 className="font-display font-semibold text-surface-200">
+      <div className="p-4" style={headerStyle}>
+        <h2 className="font-semibold" style={{ color: '#f1f5f9' }}>
           屬性面板
         </h2>
-        <p className="text-sm text-surface-400 mt-1">
+        <p className="text-sm mt-1" style={{ color: '#94a3b8' }}>
           {selectedBlock.name || selectedBlock.id}
         </p>
       </div>
@@ -88,6 +122,43 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             </button>
             <p className="text-xs text-surface-500 mt-1 text-center">
               點擊後在螢幕上選取座標
+            </p>
+          </div>
+        )}
+
+        {/* 截圖 + 偏移選取按鈕（用於 click_image 等） */}
+        {OFFSET_ENABLED_BLOCKS.includes(selectedBlock.id) && onStartCapture && (
+          <div className="space-y-2">
+            <button
+              onClick={() => onStartCapture(true, selectedBlock.instance_id)}
+              className="btn btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              截圖並選取點擊位置
+            </button>
+            <p className="text-xs text-surface-500 text-center">
+              截取目標圖片，並選擇實際點擊位置
+            </p>
+          </div>
+        )}
+
+        {/* 已有圖片時的偏移選取按鈕 */}
+        {OFFSET_ENABLED_BLOCKS.includes(selectedBlock.id) && values.IMAGE_PATH && (
+          <div>
+            <button
+              onClick={() => setShowOffsetPicker(true)}
+              className="btn btn-secondary w-full flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+              重新選取偏移位置
+            </button>
+            <p className="text-xs text-surface-500 mt-1 text-center">
+              在現有圖片上重新選取點擊位置
             </p>
           </div>
         )}
@@ -115,6 +186,21 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <PositionPicker
           onPick={handlePositionPick}
           onCancel={() => setShowPositionPicker(false)}
+        />
+      )}
+
+      {/* 偏移選取器 */}
+      {showOffsetPicker && values.IMAGE_PATH && (
+        <OffsetPicker
+          imagePath={values.IMAGE_PATH}
+          onPick={handleOffsetPick}
+          onCancel={() => {
+            setShowOffsetPicker(false)
+            // 恢復視窗（OffsetPicker 會最小化視窗來擷取螢幕）
+            if (window.electronAPI) {
+              window.electronAPI.restoreWindow()
+            }
+          }}
         />
       )}
     </aside>

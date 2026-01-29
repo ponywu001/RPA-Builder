@@ -1,5 +1,5 @@
 /**
- * 頂部工具列元件
+ * 頂部工具列元件 - 未來科技風格
  */
 
 import React from 'react'
@@ -31,27 +31,55 @@ const Header: React.FC<HeaderProps> = ({
   const canExecute = currentScript && !isRunning && !isPaused
 
   return (
-    <header className="h-14 bg-surface-900 border-b border-surface-700 flex items-center justify-between px-4">
+    <header className="h-14 flex items-center justify-between px-4 relative"
+      style={{
+        background: 'linear-gradient(90deg, #0f172a, #1e293b)',
+        borderBottom: '1px solid rgba(71, 85, 105, 0.5)',
+        boxShadow: '0 2px 15px rgba(0, 0, 0, 0.2)'
+      }}
+    >
+      {/* 頂部裝飾線 */}
+      <div className="absolute top-0 left-0 right-0 h-0.5"
+        style={{
+          background: 'linear-gradient(90deg, #3B82F6, #8B5CF6, #10B981)'
+        }}
+      />
+
       {/* Logo & 標題 */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+        <div className="flex items-center gap-3">
+          {/* Logo */}
+          <div className="relative w-9 h-9 flex items-center justify-center">
+            <div className="relative w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+              }}
+            >
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
           </div>
-          <span className="font-display font-bold text-lg text-surface-100">
+          <span className="font-bold text-lg tracking-wide" style={{ color: '#f1f5f9' }}>
             RPA Builder
           </span>
         </div>
 
         {/* 當前腳本名稱 */}
         {currentScript && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-surface-800 rounded-lg">
-            <svg className="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+            style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)'
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              style={{ color: '#3B82F6' }}
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span className="text-sm text-surface-300">{currentScript.name}</span>
+            <span className="text-sm" style={{ color: '#e2e8f0' }}>{currentScript.name}</span>
           </div>
         )}
       </div>
@@ -82,7 +110,10 @@ const Header: React.FC<HeaderProps> = ({
           <span>新增</span>
         </button>
 
-        <div className="w-px h-6 bg-surface-600 mx-2" />
+        {/* 分隔線 */}
+        <div className="w-px h-6 mx-2"
+          style={{ background: 'rgba(71, 85, 105, 0.5)' }}
+        />
 
         {/* 執行控制 */}
         {isRunning ? (
@@ -134,7 +165,7 @@ const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onExecute}
             disabled={!canExecute}
-            className="btn btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed glow-pulse"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -149,7 +180,7 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-2 ml-2">
             <StatusBadge status={executionStatus.status} />
             {(isRunning || isPaused) && (
-              <span className="text-xs text-surface-400">
+              <span className="text-xs" style={{ color: '#94a3b8' }}>
                 {executionStatus.progress.current_step} / {executionStatus.progress.total_steps}
               </span>
             )}
@@ -162,19 +193,50 @@ const Header: React.FC<HeaderProps> = ({
 
 // 狀態標籤
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const statusConfig: Record<string, { color: string; label: string }> = {
-    pending: { color: 'bg-surface-500', label: '等待中' },
-    running: { color: 'bg-primary-500 animate-pulse', label: '執行中' },
-    paused: { color: 'bg-amber-500', label: '已暫停' },
-    success: { color: 'bg-emerald-500', label: '成功' },
-    failed: { color: 'bg-red-500', label: '失敗' },
-    stopped: { color: 'bg-surface-500', label: '已停止' },
+  const statusConfig: Record<string, { bg: string; color: string; label: string }> = {
+    pending: { 
+      bg: 'rgba(100, 116, 139, 0.2)',
+      color: '#94a3b8',
+      label: '等待中' 
+    },
+    running: { 
+      bg: 'rgba(59, 130, 246, 0.2)',
+      color: '#3B82F6',
+      label: '執行中' 
+    },
+    paused: { 
+      bg: 'rgba(245, 158, 11, 0.2)',
+      color: '#F59E0B',
+      label: '已暫停' 
+    },
+    success: { 
+      bg: 'rgba(16, 185, 129, 0.2)',
+      color: '#10B981',
+      label: '成功' 
+    },
+    failed: { 
+      bg: 'rgba(239, 68, 68, 0.2)',
+      color: '#EF4444',
+      label: '失敗' 
+    },
+    stopped: { 
+      bg: 'rgba(100, 116, 139, 0.2)',
+      color: '#94a3b8',
+      label: '已停止' 
+    },
   }
 
   const config = statusConfig[status] || statusConfig.pending
 
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium text-white ${config.color}`}>
+    <span 
+      className={`px-3 py-1 rounded-full text-xs font-medium ${status === 'running' ? 'animate-pulse' : ''}`}
+      style={{
+        background: config.bg,
+        color: config.color,
+        border: `1px solid ${config.color}40`
+      }}
+    >
       {config.label}
     </span>
   )

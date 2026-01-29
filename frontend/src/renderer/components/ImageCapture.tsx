@@ -1,12 +1,14 @@
 /**
- * 圖片截取元件
+ * 圖片截取元件 - 支援偏移選取
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 
 interface ImageCaptureProps {
-  onCapture: (imageData: string, name: string) => void
+  onCapture: (imageData: string, name: string, offsetX?: number, offsetY?: number) => void
   onCancel: () => void
+  /** 是否啟用偏移選取功能 */
+  enableOffsetPick?: boolean
 }
 
 interface SelectionRect {
@@ -19,6 +21,7 @@ interface SelectionRect {
 const ImageCapture: React.FC<ImageCaptureProps> = ({
   onCapture,
   onCancel,
+  enableOffsetPick = false,
 }) => {
   const [screenshot, setScreenshot] = useState<string | null>(null)
   const [selection, setSelection] = useState<SelectionRect | null>(null)
@@ -26,10 +29,16 @@ const ImageCapture: React.FC<ImageCaptureProps> = ({
   const [showNameDialog, setShowNameDialog] = useState(false)
   const [imageName, setImageName] = useState('')
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [capturedSize, setCapturedSize] = useState<{ width: number; height: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  
+  // 偏移選取相關狀態
+  const [clickOffset, setClickOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [hoverOffset, setHoverOffset] = useState<{ x: number; y: number } | null>(null)
   
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
 
   // 載入螢幕截圖
   useEffect(() => {
@@ -203,15 +212,88 @@ const ImageCapture: React.FC<ImageCaptureProps> = ({
       tempCtx.drawImage(img, x, y, w, h, 0, 0, w, h)
       const imageData = tempCanvas.toDataURL('image/png')
       setCapturedImage(imageData)
+      setCapturedSize({ width: w, height: h })
+      setClickOffset({ x: 0, y: 0 }) // 重置偏移
       setShowNameDialog(true)
     }
     img.src = screenshot
   }, [selection, screenshot])
 
+  // 處理預覽圖片上的點擊（設定偏移）
+  const handlePreviewClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!enableOffsetPick || !capturedSize || !previewRef.current) return
+    
+    const rect = previewRef.current.getBoundingClientRect()
+    const img = previewRef.current.querySelector('img')
+    if (!img) return
+    
+    const imgRect = img.getBoundingClientRect()
+    
+    // 計算點擊位置相對於圖片的座標
+    const clickX = e.clientX - imgRect.left
+    const clickY = e.clientY - imgRect.top
+    
+    // 計算縮放比例
+    const scaleX = capturedSize.width / imgRect.width
+    const scaleY = capturedSize.height / imgRect.height
+    
+    // 計算實際圖片座標
+    const actualX = clickX * scaleX
+    const actualY = clickY * scaleY
+    
+    // 計算相對於圖片中心的偏移
+    const centerX = capturedSize.width / 2
+    const centerY = capturedSize.height / 2
+    const offsetX = Math.round(actualX - centerX)
+    const offsetY = Math.round(actualY - centerY)
+    
+    setClickOffset({ x: offsetX, y: offsetY })
+  }, [enableOffsetPick, capturedSize])
+
+  // 處理預覽圖片上的滑鼠移動（顯示即時偏移）
+  const handlePreviewMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!enableOffsetPick || !capturedSize || !previewRef.current) return
+    
+    const img = previewRef.current.querySelector('img')
+    if (!img) return
+    
+    const imgRect = img.getBoundingClientRect()
+    
+    // 計算點擊位置相對於圖片的座標
+    const clickX = e.clientX - imgRect.left
+    const clickY = e.clientY - imgRect.top
+    
+    // 檢查是否在圖片範圍內
+    if (clickX < 0 || clickX > imgRect.width || clickY < 0 || clickY > imgRect.height) {
+      setHoverOffset(null)
+      return
+    }
+    
+    // 計算縮放比例
+    const scaleX = capturedSize.width / imgRect.width
+    const scaleY = capturedSize.height / imgRect.height
+    
+    // 計算實際圖片座標
+    const actualX = clickX * scaleX
+    const actualY = clickY * scaleY
+    
+    // 計算相對於圖片中心的偏移
+    const centerX = capturedSize.width / 2
+    const centerY = capturedSize.height / 2
+    const offsetX = Math.round(actualX - centerX)
+    const offsetY = Math.round(actualY - centerY)
+    
+    setHoverOffset({ x: offsetX, y: offsetY })
+  }, [enableOffsetPick, capturedSize])
+
   // 確認儲存
   const handleSave = () => {
     if (capturedImage && imageName.trim()) {
-      onCapture(capturedImage, imageName.trim())
+      if (enableOffsetPick) {
+        onCapture(capturedImage, imageName.trim(), clickOffset.x, clickOffset.y)
+      } else {
+        onCapture(capturedImage, imageName.trim())
+      }
     }
   }
 
@@ -286,14 +368,69 @@ const ImageCapture: React.FC<ImageCaptureProps> = ({
               儲存截圖
             </div>
             <div className="panel-body space-y-4">
-              {/* 預覽 */}
+              {/* 預覽（支援偏移選取） */}
               {capturedImage && (
-                <div className="rounded-lg overflow-hidden bg-surface-800">
+                <div 
+                  ref={previewRef}
+                  className={`rounded-lg overflow-hidden bg-surface-800 relative ${enableOffsetPick ? 'cursor-crosshair' : ''}`}
+                  onClick={handlePreviewClick}
+                  onMouseMove={handlePreviewMouseMove}
+                  onMouseLeave={() => setHoverOffset(null)}
+                >
                   <img
                     src={capturedImage}
                     alt="Preview"
                     className="w-full max-h-48 object-contain"
+                    draggable={false}
                   />
+                  
+                  {/* 偏移選取提示 */}
+                  {enableOffsetPick && (
+                    <>
+                      {/* 中心點標示 */}
+                      <div 
+                        className="absolute w-3 h-3 bg-green-500 rounded-full border-2 border-white pointer-events-none"
+                        style={{
+                          left: '50%',
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                      />
+                      
+                      {/* 選取的偏移點 */}
+                      {(clickOffset.x !== 0 || clickOffset.y !== 0) && capturedSize && (
+                        <div 
+                          className="absolute w-3 h-3 bg-blue-500 rounded-full border-2 border-white pointer-events-none"
+                          style={{
+                            left: `calc(50% + ${clickOffset.x / capturedSize.width * 100}%)`,
+                            top: `calc(50% + ${clickOffset.y / capturedSize.height * 100}%)`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* 偏移選取說明和數值 */}
+              {enableOffsetPick && (
+                <div className="bg-surface-800 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-surface-400">
+                    <span className="w-3 h-3 bg-green-500 rounded-full inline-block" />
+                    <span>圖片中心</span>
+                    <span className="w-3 h-3 bg-blue-500 rounded-full inline-block ml-2" />
+                    <span>點擊位置</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-surface-300">偏移值：</span>
+                    <span className="font-mono text-primary-400">
+                      X: {hoverOffset?.x ?? clickOffset.x}, Y: {hoverOffset?.y ?? clickOffset.y}
+                    </span>
+                  </div>
+                  <p className="text-xs text-surface-500">
+                    點擊圖片上的位置來設定偏移（預設為中心）
+                  </p>
                 </div>
               )}
 

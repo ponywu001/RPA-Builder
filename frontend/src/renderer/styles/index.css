@@ -2,15 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 基礎樣式 */
+/* ============================================
+   RPA Builder - 未來科技風格主題
+   ============================================ */
+
 :root {
-  --color-bg: #020617;
-  --color-surface: #0f172a;
-  --color-surface-light: #1e293b;
-  --color-primary: #0ea5e9;
-  --color-accent: #d946ef;
-  --color-text: #f1f5f9;
-  --color-text-muted: #94a3b8;
+  /* 主色調 - 霓虹青色 */
+  --color-primary: #00f0ff;
+  --color-primary-dim: #0099aa;
+  --color-primary-glow: rgba(0, 240, 255, 0.5);
+  
+  /* 強調色 - 霓虹紫/粉 */
+  --color-accent: #ff00ff;
+  --color-accent-dim: #aa00aa;
+  --color-accent-glow: rgba(255, 0, 255, 0.5);
+  
+  /* 警告/成功色 */
+  --color-success: #00ff88;
+  --color-warning: #ffaa00;
+  --color-danger: #ff3366;
+  
+  /* 背景色 - 深邃太空黑 */
+  --color-bg: #050510;
+  --color-bg-gradient: linear-gradient(135deg, #050510 0%, #0a0a20 50%, #050515 100%);
+  
+  /* 表面色 */
+  --color-surface: rgba(10, 15, 30, 0.8);
+  --color-surface-solid: #0a0f1e;
+  --color-surface-light: rgba(20, 30, 60, 0.6);
+  --color-surface-border: rgba(0, 240, 255, 0.15);
+  
+  /* 文字色 */
+  --color-text: #e0f0ff;
+  --color-text-bright: #ffffff;
+  --color-text-muted: #6080a0;
+  
+  /* 發光效果 */
+  --glow-primary: 0 0 20px var(--color-primary-glow), 0 0 40px rgba(0, 240, 255, 0.2);
+  --glow-accent: 0 0 20px var(--color-accent-glow), 0 0 40px rgba(255, 0, 255, 0.2);
 }
 
 * {
@@ -26,36 +55,61 @@ body,
 }
 
 body {
-  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--color-bg);
+  background-image: var(--color-bg-gradient);
   color: var(--color-text);
   overflow: hidden;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* 滾動條樣式 */
+/* 等寬字體 - 用於程式碼和數字 */
+.font-mono, code, pre, .log-entry, input[type="number"] {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* 全局掃描線效果 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 240, 255, 0.01) 2px,
+    rgba(0, 240, 255, 0.01) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================
+   滾動條 - 霓虹風格
+   ============================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-surface);
-  border-radius: 4px;
+  background: rgba(0, 20, 40, 0.5);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-surface-light);
-  border-radius: 4px;
+  background: linear-gradient(180deg, var(--color-primary-dim), var(--color-accent-dim));
+  border-radius: 3px;
+  box-shadow: 0 0 10px var(--color-primary-glow);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
 }
 
-/* Blockly 自定義樣式 */
-/* 關閉工具箱/flyout 後 scrollbar 殘留：Blockly 以 setAttribute("display","none") 隱藏
-   scrollbar SVG，外部 CSS（如 Tailwind preflight 的 svg { display: block }）會覆寫，
-   需強制尊重 attribute 以隱藏殘留的 scrollbar。參考：Blockly 社群 / react-blockly #75 */
+/* ============================================
+   Blockly 自定義樣式
+   ============================================ */
 svg[display='none'] {
   display: none !important;
 }
@@ -68,136 +122,476 @@ svg[display='none'] {
   fill: transparent !important;
 }
 
+/* 工具箱 */
 .blocklyToolboxDiv {
-  background: var(--color-surface) !important;
-  border-right: 1px solid var(--color-surface-light) !important;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98)) !important;
+  border-right: 1px solid rgba(71, 85, 105, 0.5) !important;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3) !important;
+  padding: 8px 0 !important;
+}
+
+.blocklyTreeRow {
+  padding: 8px 12px !important;
+  margin: 2px 8px !important;
+  border-radius: 8px !important;
+  transition: background 0.2s !important;
+  display: flex !important;
+  align-items: center !important;
+  height: auto !important;
+  line-height: 1 !important;
+}
+
+.blocklyTreeRow:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.blocklyTreeSelected {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* 工具箱圖示 (彩色方塊) */
+.blocklyTreeIcon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 10px !important;
+  border-radius: 4px !important;
+  flex-shrink: 0 !important;
+  vertical-align: middle !important;
 }
 
 .blocklyTreeLabel {
-  color: var(--color-text) !important;
-  font-family: 'Space Grotesk', sans-serif !important;
+  color: #e2e8f0 !important;
+  font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.blocklyTreeSelected .blocklyTreeLabel {
+  color: #3B82F6 !important;
+}
+
+/* Blockly 積木樣式 */
+.blocklyDraggable {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25)) !important;
+}
+
+.blocklySelected > .blocklyPath {
+  stroke: #f472b6 !important;
+  stroke-width: 2px !important;
+  filter: drop-shadow(0 0 4px #f472b6) drop-shadow(0 0 8px rgba(244, 114, 182, 0.5)) !important;
+  animation: cyber-pulse 1.5s ease-in-out infinite !important;
+}
+
+@keyframes cyber-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px #f472b6) drop-shadow(0 0 8px rgba(244, 114, 182, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px #f472b6) drop-shadow(0 0 16px rgba(244, 114, 182, 0.6));
+  }
+}
+
+.blocklySelected > .blocklyPathLight {
+  display: none !important;
+}
+
+.blocklySelected > .blocklyPathDark {
+  display: none !important;
+}
+
+/* 積木文字 */
+.blocklyText {
+  font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  fill: #ffffff !important;
+}
+
+/* 積木內間距調整 */
+.blocklyEditableText > rect {
+  rx: 6 !important;
+  ry: 6 !important;
+}
+
+/* 連接線淡化 */
+.blocklyConnectionLine {
+  stroke: rgba(148, 163, 184, 0.3) !important;
+}
+
+/* Blockly 輸入框 (編輯時的 HTML input) */
+.blocklyHtmlInput {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+  background: #1e293b !important;
+  border: 2px solid #3B82F6 !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  color: #f1f5f9 !important;
+}
+
+.blocklyHtmlInput:focus {
+  border-color: #60A5FA !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}
+
+/* Blockly 積木內的輸入欄位文字 (白色背景區域) */
+.blocklyEditableText > text {
+  fill: #1e293b !important;
+}
+
+/* 積木內嵌的欄位背景 */
+.blocklyEditableText > rect {
+  fill: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* 下拉選單文字顏色 */
+.blocklyDropdownText {
+  fill: #1e293b !important;
+  font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
+  font-size: 13px !important;
+}
+
+/* 下拉選單箭頭 */
+.blocklyDropdownArrow {
+  fill: #475569 !important;
+}
+
+/* 積木內的所有文字欄位 - 強制深色 */
+.blocklyEditableField text,
+.blocklyNonEditableField text,
+.blocklyFieldDropdown text,
+g.blocklyEditableText text,
+g.blocklyNonEditableText text {
+  fill: #1e293b !important;
+}
+
+/* 強制所有在白色背景上的文字為深色 */
+.blocklySvg text.blocklyText {
+  fill: #ffffff !important;
+}
+
+.blocklySvg .blocklyEditableText text.blocklyText,
+.blocklySvg g[data-argument-type] text {
+  fill: #1e293b !important;
+}
+
+/* Blockly 下拉選單 */
+.blocklyDropdownText {
+  font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
+  font-size: 13px !important;
+}
+
+/* Blockly 浮動視窗 */
+.blocklyWidgetDiv {
+  z-index: 10000 !important;
+}
+
+.blocklyDropDownDiv {
+  background: #1e293b !important;
+  border: 1px solid rgba(71, 85, 105, 0.5) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+.blocklyMenuItem {
+  padding: 8px 16px !important;
+  color: #e2e8f0 !important;
+  font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
+}
+
+.blocklyMenuItem:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+.blocklyMenuItemSelected {
+  background: rgba(59, 130, 246, 0.3) !important;
 }
 
 .blocklyTreeSelected .blocklyTreeLabel {
   color: var(--color-primary) !important;
+  text-shadow: 0 0 15px var(--color-primary-glow);
 }
 
 .blocklyFlyoutBackground {
-  fill: var(--color-surface) !important;
-  fill-opacity: 0.95 !important;
+  fill: rgba(5, 10, 25, 0.95) !important;
+  fill-opacity: 1 !important;
 }
 
-/* 按鈕樣式 */
+/* ============================================
+   按鈕樣式 - 霓虹發光
+   ============================================ */
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface-950;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
+    @apply focus:outline-none;
+    position: relative;
+    overflow: hidden;
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+
+  .btn:hover::before {
+    transform: translateX(100%);
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-500;
-    @apply focus:ring-primary-500;
+    background: #3B82F6;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn-primary:hover {
+    background: #2563EB;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
   }
 
   .btn-secondary {
-    @apply bg-surface-700 text-surface-100 hover:bg-surface-600;
-    @apply focus:ring-surface-500;
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border: 1px solid rgba(71, 85, 105, 0.5);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(71, 85, 105, 0.8);
   }
 
   .btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-500;
-    @apply focus:ring-red-500;
+    background: #EF4444;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  }
+
+  .btn-danger:hover {
+    background: #DC2626;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
   }
 
   .btn-success {
-    @apply bg-emerald-600 text-white hover:bg-emerald-500;
-    @apply focus:ring-emerald-500;
+    background: #10B981;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-success:hover {
+    background: #059669;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
   }
 
   .btn-icon {
-    @apply p-2 rounded-lg transition-colors;
-    @apply hover:bg-surface-700;
+    @apply p-2 rounded-lg transition-all duration-200;
+    background: transparent;
+    color: #94a3b8;
   }
 
-  /* 輸入框樣式 */
+  .btn-icon:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+  }
+
+  /* ============================================
+     輸入框樣式 - 玻璃擬態
+     ============================================ */
   .input {
-    @apply w-full px-3 py-2 rounded-lg;
-    @apply bg-surface-800 border border-surface-600;
-    @apply text-surface-100 placeholder-surface-500;
-    @apply focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500;
-    @apply transition-colors duration-200;
+    @apply w-full px-3 py-2.5 rounded-lg transition-all duration-200;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    font-size: 14px;
   }
 
-  /* 面板樣式 */
+  .input[type="number"] {
+    font-family: 'JetBrains Mono', monospace;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .input::placeholder {
+    color: #64748b;
+  }
+
+  .input:hover {
+    border-color: rgba(148, 163, 184, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: #3B82F6;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+  
+  select.input {
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+  }
+
+  /* ============================================
+     面板樣式 - 全息效果
+     ============================================ */
   .panel {
-    @apply bg-surface-900 rounded-xl border border-surface-700;
-    @apply shadow-xl shadow-black/20;
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid rgba(71, 85, 105, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   }
 
   .panel-header {
-    @apply px-4 py-3 border-b border-surface-700;
-    @apply font-display font-semibold text-surface-200;
+    @apply px-4 py-3;
+    border-bottom: 1px solid rgba(71, 85, 105, 0.5);
+    color: #f1f5f9;
+    font-weight: 600;
   }
 
   .panel-body {
     @apply p-4;
   }
 
-  /* 日誌樣式 */
+  /* ============================================
+     日誌樣式 - 終端機風格
+     ============================================ */
   .log-entry {
-    @apply py-1 px-2 font-mono text-sm;
+    @apply py-1.5 px-3 font-mono text-sm;
+    border-left: 2px solid transparent;
+    transition: background 0.15s;
+  }
+
+  .log-entry:hover {
+    background: rgba(255, 255, 255, 0.03);
   }
 
   .log-info {
-    @apply text-surface-300;
+    color: #e2e8f0;
+    border-left-color: #3B82F6;
   }
 
   .log-warning {
-    @apply text-amber-400;
+    color: #F59E0B;
+    border-left-color: #F59E0B;
   }
 
   .log-error {
-    @apply text-red-400;
+    color: #EF4444;
+    border-left-color: #EF4444;
   }
 
   .log-debug {
-    @apply text-surface-500;
+    color: #64748b;
+    border-left-color: #64748b;
   }
 
   .log-timestamp {
-    @apply text-surface-500 mr-2;
+    color: #64748b;
+    margin-right: 8px;
   }
 }
 
-/* 動畫 */
+/* ============================================
+   動畫效果
+   ============================================ */
+
+/* 光暈呼吸動畫 */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--color-primary-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--color-primary-glow), 0 0 60px rgba(0, 240, 255, 0.2);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* 閃爍動畫 */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
   }
-
   100% {
     background-position: 200% 0;
   }
 }
 
 .shimmer {
-  background: linear-gradient(90deg,
-      var(--color-surface) 25%,
-      var(--color-surface-light) 50%,
-      var(--color-surface) 75%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 240, 255, 0.1) 25%,
+    rgba(0, 240, 255, 0.3) 50%,
+    rgba(0, 240, 255, 0.1) 75%
+  );
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer 2s infinite;
 }
 
-/* 網格背景 */
+/* 掃描動畫 */
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+/* 資料流動畫 */
+@keyframes data-flow {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ============================================
+   網格背景 - 科技感
+   ============================================ */
 .grid-bg {
   background-image:
-    linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
+    radial-gradient(ellipse at center, rgba(0, 240, 255, 0.03) 0%, transparent 70%),
+    linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px, 30px 30px;
 }
 
-/* 漸層邊框 */
+/* ============================================
+   漸層邊框 - 霓虹效果
+   ============================================ */
 .gradient-border {
   position: relative;
 }
@@ -208,7 +602,9 @@ svg[display='none'] {
   inset: 0;
   padding: 1px;
   border-radius: inherit;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent), var(--color-primary));
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -218,4 +614,85 @@ svg[display='none'] {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ============================================
+   側邊欄樣式增強
+   ============================================ */
+aside {
+  background: linear-gradient(180deg, rgba(5, 10, 25, 0.95), rgba(10, 15, 35, 0.98)) !important;
+  border-color: rgba(0, 240, 255, 0.1) !important;
+}
+
+/* ============================================
+   標題列增強
+   ============================================ */
+header {
+  background: linear-gradient(90deg, rgba(5, 10, 25, 0.95), rgba(10, 20, 40, 0.95)) !important;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.15) !important;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ============================================
+   選擇框增強
+   ============================================ */
+select {
+  background: rgba(5, 15, 30, 0.9) !important;
+  border: 1px solid rgba(0, 240, 255, 0.2) !important;
+  color: var(--color-text) !important;
+}
+
+select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2) !important;
+}
+
+select option {
+  background: #0a0f1e;
+  color: var(--color-text);
+}
+
+/* ============================================
+   圖片預覽增強
+   ============================================ */
+img {
+  border-radius: 8px;
+}
+
+/* ============================================
+   滑入動畫
+   ============================================ */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* ============================================
+   文字發光效果
+   ============================================ */
+.text-glow {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+}
+
+.text-glow-sm {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
 }

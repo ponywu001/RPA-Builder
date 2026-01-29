@@ -49,7 +49,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({
         {
           kind: 'category',
           name: '動作',
-          colour: '#5b80a5',
+          colour: '#3B82F6',
           contents: [
             { kind: 'block', type: 'click_image' },
             { kind: 'block', type: 'click_position' },
@@ -67,7 +67,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({
         {
           kind: 'category',
           name: '控制',
-          colour: '#5ca65b',
+          colour: '#8B5CF6',
           contents: [
             { kind: 'block', type: 'if_image_exists' },
             { kind: 'block', type: 'loop_times' },
@@ -80,7 +80,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({
         {
           kind: 'category',
           name: '變數',
-          colour: '#a55b80',
+          colour: '#F59E0B',
           contents: [
             { kind: 'block', type: 'set_variable' },
             { kind: 'block', type: 'get_variable' },
@@ -90,7 +90,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({
         {
           kind: 'category',
           name: '進階',
-          colour: '#a5805b',
+          colour: '#10B981',
           contents: [
             { kind: 'block', type: 'run_script' },
             { kind: 'block', type: 'http_request' },

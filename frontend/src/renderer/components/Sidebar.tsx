@@ -1,5 +1,5 @@
 /**
- * 左側邊欄元件 - 腳本列表與模板管理
+ * 左側邊欄元件 - 未來科技風格
  */
 
 import React, { useState } from 'react'
@@ -82,39 +82,76 @@ const Sidebar: React.FC<SidebarProps> = ({
   }
 
   return (
-    <aside className="w-64 bg-surface-900 border-r border-surface-700 flex flex-col">
+    <aside 
+      className="w-64 flex flex-col"
+      style={{
+        background: 'linear-gradient(180deg, #0f172a, #1e293b)',
+        borderRight: '1px solid rgba(71, 85, 105, 0.5)',
+        boxShadow: '2px 0 20px rgba(0, 0, 0, 0.15)'
+      }}
+    >
       {/* Tab 選擇 */}
-      <div className="flex border-b border-surface-700">
+      <div 
+        className="flex"
+        style={{ borderBottom: '1px solid rgba(71, 85, 105, 0.5)' }}
+      >
         <button
           onClick={() => setActiveTab('scripts')}
-          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'scripts'
-              ? 'text-primary-400 border-b-2 border-primary-500'
-              : 'text-surface-400 hover:text-surface-200'
-          }`}
+          className="flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative"
+          style={{
+            color: activeTab === 'scripts' ? '#3B82F6' : '#94a3b8',
+            background: activeTab === 'scripts' ? 'rgba(59, 130, 246, 0.1)' : 'transparent'
+          }}
         >
           腳本
+          {activeTab === 'scripts' && (
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ background: '#3B82F6' }}
+            />
+          )}
         </button>
         <button
           onClick={() => setActiveTab('templates')}
-          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'templates'
-              ? 'text-primary-400 border-b-2 border-primary-500'
-              : 'text-surface-400 hover:text-surface-200'
-          }`}
+          className="flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative"
+          style={{
+            color: activeTab === 'templates' ? '#3B82F6' : '#94a3b8',
+            background: activeTab === 'templates' ? 'rgba(59, 130, 246, 0.1)' : 'transparent'
+          }}
         >
           模板圖片
+          {activeTab === 'templates' && (
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ background: '#3B82F6' }}
+            />
+          )}
         </button>
       </div>
 
       {/* 內容區 */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'scripts' ? (
-          <div className="p-2">
+          <div className="p-3">
             {/* 新增腳本按鈕 */}
             <button
               onClick={onNewScript}
-              className="w-full mb-2 px-3 py-2 flex items-center gap-2 rounded-lg border border-dashed border-surface-600 text-surface-400 hover:border-primary-500 hover:text-primary-400 transition-colors"
+              className="w-full mb-3 px-3 py-2.5 flex items-center gap-2 rounded-lg transition-all duration-300"
+              style={{
+                background: 'rgba(59, 130, 246, 0.05)',
+                border: '1px dashed rgba(59, 130, 246, 0.3)',
+                color: '#94a3b8'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#3B82F6'
+                e.currentTarget.style.color = '#3B82F6'
+                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)'
+                e.currentTarget.style.color = '#94a3b8'
+                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)'
+              }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -124,7 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             {/* 腳本列表 */}
             {scripts.length === 0 ? (
-              <div className="text-center py-8 text-surface-500 text-sm">
+              <div className="text-center py-8 text-sm" style={{ color: '#64748b' }}>
                 尚無腳本
               </div>
             ) : (
@@ -135,19 +172,33 @@ const Sidebar: React.FC<SidebarProps> = ({
                     onClick={() => editingScriptId !== script.id && onSelectScript(script.id)}
                     onMouseEnter={() => setHoveredScript(script.id)}
                     onMouseLeave={() => setHoveredScript(null)}
-                    className={`group px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                      currentScriptId === script.id
-                        ? 'bg-primary-500/20 text-primary-300'
-                        : 'hover:bg-surface-800 text-surface-300'
-                    }`}
+                    className="group px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-300"
+                    style={{
+                      background: currentScriptId === script.id 
+                        ? 'rgba(59, 130, 246, 0.15)'
+                        : hoveredScript === script.id 
+                          ? 'rgba(255, 255, 255, 0.05)'
+                          : 'transparent',
+                      border: currentScriptId === script.id 
+                        ? '1px solid rgba(59, 130, 246, 0.4)'
+                        : '1px solid transparent',
+                      borderRadius: '8px'
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg 
+                          className="w-4 h-4 flex-shrink-0" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                          style={{ 
+                            color: currentScriptId === script.id ? '#3B82F6' : '#94a3b8'
+                          }}
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         
-                        {/* 編輯模式或顯示模式 */}
                         {editingScriptId === script.id ? (
                           <input
                             type="text"
@@ -159,12 +210,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                               if (e.key === 'Escape') handleCancelRename()
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex-1 text-sm bg-surface-700 border border-primary-500 rounded px-1 py-0.5 text-surface-100 outline-none"
+                            className="flex-1 text-sm rounded px-2 py-0.5 outline-none"
+                            style={{
+                              background: 'rgba(15, 23, 42, 0.9)',
+                              border: '1px solid #3B82F6',
+                              color: '#e2e8f0'
+                            }}
                             autoFocus
                           />
                         ) : (
                           <span 
                             className="text-sm truncate"
+                            style={{ 
+                              color: currentScriptId === script.id ? '#3B82F6' : '#e2e8f0'
+                            }}
                             onDoubleClick={(e) => handleStartRename(script, e)}
                           >
                             {script.name}
@@ -175,30 +234,45 @@ const Sidebar: React.FC<SidebarProps> = ({
                       {/* 操作按鈕 */}
                       {hoveredScript === script.id && editingScriptId !== script.id && (
                         <div className="flex items-center gap-1">
-                          {/* 匯出按鈕 */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
                               onExportScript(script.id)
                             }}
-                            className="p-1 rounded hover:bg-surface-600 text-surface-400 hover:text-green-400 transition-colors"
+                            className="p-1.5 rounded transition-all duration-200"
+                            style={{ color: '#94a3b8' }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#10B981'
+                              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = '#94a3b8'
+                              e.currentTarget.style.background = 'transparent'
+                            }}
                             title="匯出為 Python"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
                           </button>
-                          {/* 重新命名按鈕 */}
                           <button
                             onClick={(e) => handleStartRename(script, e)}
-                            className="p-1 rounded hover:bg-surface-600 text-surface-400 hover:text-surface-200 transition-colors"
+                            className="p-1.5 rounded transition-all duration-200"
+                            style={{ color: '#94a3b8' }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#3B82F6'
+                              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = '#94a3b8'
+                              e.currentTarget.style.background = 'transparent'
+                            }}
                             title="重新命名"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                           </button>
-                          {/* 刪除按鈕 */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -206,7 +280,16 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 onDeleteScript(script.id)
                               }
                             }}
-                            className="p-1 rounded hover:bg-red-500/20 text-surface-400 hover:text-red-400 transition-colors"
+                            className="p-1.5 rounded transition-all duration-200"
+                            style={{ color: '#94a3b8' }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#EF4444'
+                              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = '#94a3b8'
+                              e.currentTarget.style.background = 'transparent'
+                            }}
                             title="刪除"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,7 +300,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       )}
                     </div>
                     
-                    <div className="mt-1 text-xs text-surface-500">
+                    <div className="mt-1 text-xs" style={{ color: '#64748b' }}>
                       {formatDate(script.updated_at)}
                     </div>
                   </div>
@@ -226,11 +309,26 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
         ) : (
-          <div className="p-2">
+          <div className="p-3">
             {/* 重新載入按鈕 */}
             <button
               onClick={onRefreshTemplates}
-              className="w-full mb-2 px-3 py-2 flex items-center gap-2 rounded-lg border border-dashed border-surface-600 text-surface-400 hover:border-primary-500 hover:text-primary-400 transition-colors"
+              className="w-full mb-3 px-3 py-2.5 flex items-center gap-2 rounded-lg transition-all duration-300"
+              style={{
+                background: 'rgba(59, 130, 246, 0.05)',
+                border: '1px dashed rgba(59, 130, 246, 0.3)',
+                color: '#94a3b8'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#3B82F6'
+                e.currentTarget.style.color = '#3B82F6'
+                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)'
+                e.currentTarget.style.color = '#94a3b8'
+                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)'
+              }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -240,9 +338,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             {/* 模板列表 */}
             {templates.length === 0 ? (
-              <div className="text-center py-8 text-surface-500 text-sm">
+              <div className="text-center py-8 text-sm" style={{ color: '#64748b' }}>
                 尚無模板圖片<br />
-                <span className="text-xs">按 Ctrl+Shift+S 截圖</span>
+                <span className="text-xs" style={{ color: '#475569' }}>按 Ctrl+Shift+S 截圖</span>
               </div>
             ) : (
               <div className="space-y-2">
@@ -251,10 +349,23 @@ const Sidebar: React.FC<SidebarProps> = ({
                     key={template.name}
                     onMouseEnter={() => setHoveredTemplate(template.name)}
                     onMouseLeave={() => setHoveredTemplate(null)}
-                    className="group p-2 rounded-lg bg-surface-800 hover:bg-surface-700 transition-colors"
+                    className="group p-2 rounded-lg transition-all duration-300"
+                    style={{
+                      background: hoveredTemplate === template.name 
+                        ? 'rgba(255, 255, 255, 0.08)'
+                        : 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid',
+                      borderColor: hoveredTemplate === template.name 
+                        ? 'rgba(71, 85, 105, 0.5)'
+                        : 'rgba(71, 85, 105, 0.3)',
+                      borderRadius: '8px'
+                    }}
                   >
                     {/* 預覽圖 */}
-                    <div className="relative aspect-video rounded overflow-hidden bg-surface-900 mb-2">
+                    <div 
+                      className="relative aspect-video rounded overflow-hidden mb-2"
+                      style={{ background: 'rgba(15, 23, 42, 0.8)' }}
+                    >
                       <img
                         src={api.getTemplateUrl(template.name)}
                         alt={template.name}
@@ -269,9 +380,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                       {hoveredTemplate === template.name && (
                         <button
                           onClick={() => handleDeleteTemplate(template.name)}
-                          className="absolute top-1 right-1 p-1 rounded bg-red-500/80 hover:bg-red-500 text-white transition-colors"
+                          className="absolute top-1 right-1 p-1 rounded transition-all duration-200"
+                          style={{
+                            background: '#EF4444',
+                            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)'
+                          }}
                         >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </button>
@@ -280,8 +395,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                     
                     {/* 資訊 */}
                     <div className="text-xs">
-                      <div className="text-surface-300 truncate">{template.name}</div>
-                      <div className="text-surface-500">{formatFileSize(template.size)}</div>
+                      <div className="truncate" style={{ color: '#e2e8f0' }}>{template.name}</div>
+                      <div style={{ color: '#64748b' }}>{formatFileSize(template.size)}</div>
                     </div>
                   </div>
                 ))}

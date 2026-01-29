@@ -185,6 +185,45 @@ async def test_capture(
         )
 
 
+@router.get("/find")
+async def find_image(
+    image_path: str,
+    confidence: float = 0.8,
+):
+    """
+    在螢幕上尋找圖片位置
+    
+    用於偏移選取功能，返回圖片位置資訊
+    """
+    try:
+        position = image_finder.find_on_screen(
+            template_path=image_path,
+            confidence=confidence,
+        )
+        
+        if position:
+            return {
+                "x": position.x,
+                "y": position.y,
+                "width": position.width,
+                "height": position.height,
+                "confidence": position.confidence,
+            }
+        else:
+            return None
+            
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"圖片辨識失敗: {e}",
+        )
+
+
 @router.get("/templates/{name}")
 async def get_template_image(
     name: str,

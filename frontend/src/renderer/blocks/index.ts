@@ -53,7 +53,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '在螢幕上找到指定圖片並點擊（信心度越低越寬鬆）',
         inputsInline: true,
       } as BlockJson)
@@ -73,7 +73,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '點擊指定的螢幕座標',
         inputsInline: true,
       } as BlockJson)
@@ -93,7 +93,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '在螢幕上找到指定圖片並雙擊',
         inputsInline: true,
       } as BlockJson)
@@ -113,7 +113,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '在螢幕上找到指定圖片並右鍵點擊',
         inputsInline: true,
       } as BlockJson)
@@ -131,7 +131,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '模擬鍵盤輸入文字（支援中文）',
       } as BlockJson)
     }
@@ -148,7 +148,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '執行鍵盤組合鍵（如 ctrl+c, alt+tab）',
       } as BlockJson)
     }
@@ -166,7 +166,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '滾動滑鼠滾輪',
         inputsInline: true,
       } as BlockJson)
@@ -186,7 +186,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '從一個圖片位置拖曳到另一個圖片位置',
         inputsInline: true,
       } as BlockJson)
@@ -204,7 +204,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '等待指定的秒數',
       } as BlockJson)
     }
@@ -223,7 +223,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '等待直到指定圖片出現在螢幕上',
         inputsInline: true,
       } as BlockJson)
@@ -243,7 +243,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5b80a5',
+        colour: '#3B82F6',
         tooltip: '等待直到指定圖片從螢幕上消失',
         inputsInline: true,
       } as BlockJson)
@@ -272,7 +272,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5ca65b',
+        colour: '#8B5CF6',
         tooltip: '根據圖片是否存在來執行不同的動作',
         inputsInline: true,
       } as BlockJson)
@@ -294,7 +294,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5ca65b',
+        colour: '#8B5CF6',
         tooltip: '重複執行指定次數',
       } as BlockJson)
     }
@@ -316,7 +316,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5ca65b',
+        colour: '#8B5CF6',
         tooltip: '當圖片存在時持續執行',
         inputsInline: true,
       } as BlockJson)
@@ -339,7 +339,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#5ca65b',
+        colour: '#8B5CF6',
         tooltip: '重複執行直到圖片出現',
         inputsInline: true,
       } as BlockJson)
@@ -353,7 +353,7 @@ export function initBlocks(): void {
         type: 'break_loop',
         message0: '跳出迴圈',
         previousStatement: null,
-        colour: '#5ca65b',
+        colour: '#8B5CF6',
         tooltip: '中斷當前迴圈',
       } as BlockJson)
     }
@@ -366,7 +366,7 @@ export function initBlocks(): void {
         type: 'continue_loop',
         message0: '繼續下一輪',
         previousStatement: null,
-        colour: '#5ca65b',
+        colour: '#8B5CF6',
         tooltip: '跳過本輪迴圈，繼續下一輪',
       } as BlockJson)
     }
@@ -386,7 +386,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#a55b80',
+        colour: '#F59E0B',
         tooltip: '設定變數值',
         inputsInline: true,
       } as BlockJson)
@@ -403,7 +403,7 @@ export function initBlocks(): void {
           { type: 'field_input', name: 'VAR_NAME', text: 'my_var' },
         ],
         output: 'String',
-        colour: '#a55b80',
+        colour: '#F59E0B',
         tooltip: '取得變數值',
       } as BlockJson)
     }
@@ -422,7 +422,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#a55b80',
+        colour: '#F59E0B',
         tooltip: '找到圖片並將座標存入變數',
         inputsInline: true,
       } as BlockJson)
@@ -442,7 +442,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#a5805b',
+        colour: '#10B981',
         tooltip: '執行另一個腳本',
       } as BlockJson)
     }
@@ -460,7 +460,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#a5805b',
+        colour: '#10B981',
         tooltip: '發送 HTTP 請求',
         inputsInline: true,
       } as BlockJson)
@@ -478,7 +478,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#a5805b',
+        colour: '#10B981',
         tooltip: '執行系統命令',
       } as BlockJson)
     }
@@ -496,7 +496,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#a5805b',
+        colour: '#10B981',
         tooltip: '輸出日誌訊息',
         inputsInline: true,
       } as BlockJson)
@@ -514,7 +514,7 @@ export function initBlocks(): void {
         ],
         previousStatement: null,
         nextStatement: null,
-        colour: '#a5805b',
+        colour: '#10B981',
         tooltip: '擷取當前螢幕並儲存',
       } as BlockJson)
     }

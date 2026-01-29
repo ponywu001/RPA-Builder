@@ -18,6 +18,10 @@ const App: React.FC = () => {
   const [currentScript, setCurrentScript] = useState<Script | null>(null)
   const [selectedBlock, setSelectedBlock] = useState<any>(null)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [captureConfig, setCaptureConfig] = useState<{
+    enableOffsetPick: boolean
+    targetBlockInstanceId?: string
+  }>({ enableOffsetPick: false })
   const [executionStatus, setExecutionStatus] = useState<ExecutionStatus | null>(null)
   const [logs, setLogs] = useState<Array<{ timestamp: string; level: string; message: string }>>([])
   const [templates, setTemplates] = useState<Template[]>([])
@@ -254,21 +258,40 @@ const App: React.FC = () => {
   }
 
   // 截圖操作
-  const handleCaptureComplete = async (imageData: string, name: string) => {
+  const handleCaptureComplete = async (imageData: string, name: string, offsetX?: number, offsetY?: number) => {
     try {
       // 移除 data URL 前綴
       const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '')
-      await api.saveTemplate(base64Data, name)
+      const result = await api.saveTemplate(base64Data, name)
       
       // 重新載入模板
       const templatesData = await api.getTemplates()
       setTemplates(templatesData)
+      
+      // 如果有目標 block，更新其圖片路徑和偏移值
+      if (captureConfig.targetBlockInstanceId && updateBlockFn) {
+        const fieldValues: Record<string, any> = {
+          IMAGE_PATH: result.path || `${name}.png`,
+        }
+        if (captureConfig.enableOffsetPick && offsetX !== undefined && offsetY !== undefined) {
+          fieldValues.OFFSET_X = offsetX
+          fieldValues.OFFSET_Y = offsetY
+        }
+        updateBlockFn(captureConfig.targetBlockInstanceId, fieldValues)
+      }
     } catch (error) {
       console.error('儲存截圖失敗:', error)
     }
     
     setIsCapturing(false)
+    setCaptureConfig({ enableOffsetPick: false })
   }
+  
+  // 開始截圖（支援偏移選取）
+  const handleStartCapture = useCallback((enableOffsetPick: boolean = false, targetBlockInstanceId?: string) => {
+    setCaptureConfig({ enableOffsetPick, targetBlockInstanceId })
+    setIsCapturing(true)
+  }, [])
 
   // Block 選擇
   const handleBlockSelect = useCallback((block: any) => {
@@ -344,6 +367,7 @@ const App: React.FC = () => {
               updateBlockFn(selectedBlock.instance_id, fieldValues)
             }
           }}
+          onStartCapture={handleStartCapture}
         />
       </div>
 
@@ -351,7 +375,11 @@ const App: React.FC = () => {
       {isCapturing && (
         <ImageCapture
           onCapture={handleCaptureComplete}
-          onCancel={() => setIsCapturing(false)}
+          onCancel={() => {
+            setIsCapturing(false)
+            setCaptureConfig({ enableOffsetPick: false })
+          }}
+          enableOffsetPick={captureConfig.enableOffsetPick}
         />
       )}
     </div>

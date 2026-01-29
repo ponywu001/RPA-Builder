@@ -2,7 +2,6 @@
 
 視覺化 RPA 應用程式 - 透過拖拉式介面設計自動化腳本，並透過 API 觸發執行。
 
-![RPA Builder](assets/screenshot.png)
 
 ## ✨ 功能特色
 
@@ -68,6 +67,17 @@ rpa-builder/
 
 ### 開發模式
 
+#### 一鍵啟動（推薦）
+
+直接雙擊 `start-dev.bat` 即可同時啟動後端和前端。
+
+或在 PowerShell 中執行：
+```powershell
+.\start-dev.ps1
+```
+
+#### 手動啟動
+
 **1. 啟動後端**
 
 ```bash
@@ -78,7 +88,7 @@ python run.py
 
 後端將在 http://127.0.0.1:8000 啟動，API 文件：http://127.0.0.1:8000/docs
 
-**2. 啟動前端**
+**2. 啟動前端 (Electron)**
 
 ```bash
 cd frontend
