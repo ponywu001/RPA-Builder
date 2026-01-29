@@ -182,6 +182,14 @@ function setupIPC(): void {
     mainWindow?.minimize()
   })
 
+  // 恢復視窗
+  ipcMain.on('restore-window', () => {
+    if (mainWindow) {
+      mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+
   // 最大化/還原視窗
   ipcMain.on('maximize-window', () => {
     if (mainWindow?.isMaximized()) {

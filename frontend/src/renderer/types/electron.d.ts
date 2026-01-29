@@ -12,6 +12,7 @@ interface ElectronAPI {
   }[]>
   getBackendUrl: () => Promise<string>
   minimizeWindow: () => void
+  restoreWindow: () => void
   maximizeWindow: () => void
   closeWindow: () => void
   onStartCapture: (callback: () => void) => void

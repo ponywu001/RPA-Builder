@@ -142,17 +142,29 @@ const App: React.FC = () => {
     }
   }
 
-  // 執行操作
+  // 執行操作（同步）
   const handleExecute = async () => {
     if (!currentScript) return
 
     setLogs([])
+    
+    // 執行前最小化視窗
+    if (window.electronAPI) {
+      window.electronAPI.minimizeWindow()
+      await new Promise(resolve => setTimeout(resolve, 300))
+    }
+    
     try {
       const result = await api.executeScript(currentScript.id)
       setExecutionStatus(result)
       setLogs(result.logs || [])
     } catch (error) {
       console.error('執行腳本失敗:', error)
+    } finally {
+      // 執行結束，恢復視窗
+      if (window.electronAPI) {
+        window.electronAPI.restoreWindow()
+      }
     }
   }
 
@@ -160,6 +172,14 @@ const App: React.FC = () => {
     if (!currentScript) return
 
     setLogs([])
+    
+    // 執行前最小化視窗
+    if (window.electronAPI) {
+      window.electronAPI.minimizeWindow()
+      // 等待視窗最小化動畫
+      await new Promise(resolve => setTimeout(resolve, 300))
+    }
+    
     try {
       const { execution_id } = await api.executeScriptAsync(currentScript.id)
       
@@ -174,15 +194,28 @@ const App: React.FC = () => {
 
           if (status.status === 'running' || status.status === 'paused') {
             setTimeout(pollStatus, 500)
+          } else {
+            // 執行結束，恢復視窗
+            if (window.electronAPI) {
+              window.electronAPI.restoreWindow()
+            }
           }
         } catch (error) {
           console.error('取得狀態失敗:', error)
+          // 發生錯誤也恢復視窗
+          if (window.electronAPI) {
+            window.electronAPI.restoreWindow()
+          }
         }
       }
 
       pollStatus()
     } catch (error) {
       console.error('執行腳本失敗:', error)
+      // 執行失敗也恢復視窗
+      if (window.electronAPI) {
+        window.electronAPI.restoreWindow()
+      }
     }
   }
 
@@ -191,6 +224,10 @@ const App: React.FC = () => {
 
     try {
       await api.stopExecution(executionStatus.execution_id)
+      // 停止後恢復視窗
+      if (window.electronAPI) {
+        window.electronAPI.restoreWindow()
+      }
     } catch (error) {
       console.error('停止執行失敗:', error)
     }

@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // 視窗控制
   minimizeWindow: () => ipcRenderer.send('minimize-window'),
+  restoreWindow: () => ipcRenderer.send('restore-window'),
   maximizeWindow: () => ipcRenderer.send('maximize-window'),
   closeWindow: () => ipcRenderer.send('close-window'),
   
@@ -43,6 +44,7 @@ declare global {
       }>>
       getBackendUrl: () => Promise<string>
       minimizeWindow: () => void
+      restoreWindow: () => void
       maximizeWindow: () => void
       closeWindow: () => void
       onStartCapture: (callback: () => void) => () => void

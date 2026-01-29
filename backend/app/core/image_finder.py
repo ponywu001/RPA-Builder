@@ -151,18 +151,32 @@ class ImageFinder:
             img.save(buffer, format="PNG")
             return buffer.getvalue()
     
-    def _get_screen_image(self, monitor: int = 0) -> np.ndarray:
-        """取得螢幕畫面作為 OpenCV 格式"""
+    def _get_screen_image(self, monitor: int = 0) -> Tuple[np.ndarray, int, int]:
+        """
+        取得螢幕畫面作為 OpenCV 格式
+        
+        Args:
+            monitor: 0=所有螢幕, 1=主螢幕, 2=第二螢幕, ...
+            
+        Returns:
+            (圖片, x_offset, y_offset) - 圖片及其左上角的全域座標偏移
+        """
         with mss.mss() as sct:
             if monitor == 0:
-                screenshot = sct.grab(sct.monitors[0])
+                # monitors[0] 是所有螢幕的虛擬組合區域
+                mon = sct.monitors[0]
             else:
-                screenshot = sct.grab(sct.monitors[monitor])
+                if monitor >= len(sct.monitors):
+                    mon = sct.monitors[0]
+                else:
+                    mon = sct.monitors[monitor]
+            
+            screenshot = sct.grab(mon)
             
             # 轉換為 numpy array (BGR 格式)
             img = np.array(screenshot)
             # BGRA -> BGR
-            return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+            return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR), mon["left"], mon["top"]
     
     def find_on_screen(
         self,
@@ -172,12 +186,12 @@ class ImageFinder:
         grayscale: bool = False,
     ) -> Optional[Position]:
         """
-        在螢幕上找到圖片
+        在螢幕上找到圖片（支援多螢幕）
         
         Args:
             template_path: 模板圖片路徑
             confidence: 匹配信心度閾值 (0-1)
-            region: 搜尋區域 (x, y, width, height)，None 表示全螢幕
+            region: 搜尋區域 (x, y, width, height)，None 表示所有螢幕
             grayscale: 是否使用灰階匹配（更快但可能不精確）
             
         Returns:
@@ -190,15 +204,19 @@ class ImageFinder:
         template = self._load_template(template_path)
         template_h, template_w = template.shape[:2]
         
-        # 取得螢幕畫面
+        # 取得螢幕畫面（monitor=0 表示所有螢幕）
+        screen, screen_left, screen_top = self._get_screen_image(monitor=0)
+        
+        # 處理搜尋區域
         if region:
             x, y, w, h = region
-            screen = self._get_screen_image()
-            screen = screen[y:y+h, x:x+w]
+            # 調整為相對於截圖的座標
+            rel_x = x - screen_left
+            rel_y = y - screen_top
+            screen = screen[rel_y:rel_y+h, rel_x:rel_x+w]
             offset_x, offset_y = x, y
         else:
-            screen = self._get_screen_image()
-            offset_x, offset_y = 0, 0
+            offset_x, offset_y = screen_left, screen_top
         
         # 灰階處理
         if grayscale:
@@ -212,7 +230,7 @@ class ImageFinder:
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
         
         if max_val >= confidence:
-            # 計算中心點
+            # 計算中心點（使用全域座標）
             center_x = max_loc[0] + template_w // 2 + offset_x
             center_y = max_loc[1] + template_h // 2 + offset_y
             
@@ -234,7 +252,7 @@ class ImageFinder:
         max_results: int = 100,
     ) -> List[Position]:
         """
-        找到螢幕上所有匹配的圖片
+        找到螢幕上所有匹配的圖片（支援多螢幕）
         
         Args:
             template_path: 模板圖片路徑
@@ -252,15 +270,18 @@ class ImageFinder:
         template = self._load_template(template_path)
         template_h, template_w = template.shape[:2]
         
-        # 取得螢幕畫面
+        # 取得螢幕畫面（monitor=0 表示所有螢幕）
+        screen, screen_left, screen_top = self._get_screen_image(monitor=0)
+        
+        # 處理搜尋區域
         if region:
             x, y, w, h = region
-            screen = self._get_screen_image()
-            screen = screen[y:y+h, x:x+w]
+            rel_x = x - screen_left
+            rel_y = y - screen_top
+            screen = screen[rel_y:rel_y+h, rel_x:rel_x+w]
             offset_x, offset_y = x, y
         else:
-            screen = self._get_screen_image()
-            offset_x, offset_y = 0, 0
+            offset_x, offset_y = screen_left, screen_top
         
         # 模板匹配
         result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
@@ -309,6 +330,7 @@ class ImageFinder:
         timeout: float = None,
         interval: float = None,
         confidence: float = None,
+        cancel_check: callable = None,
     ) -> Optional[Position]:
         """
         等待圖片出現
@@ -318,9 +340,10 @@ class ImageFinder:
             timeout: 超時時間（秒）
             interval: 檢查間隔（秒）
             confidence: 匹配信心度閾值
+            cancel_check: 可選的取消檢查函數，返回 True 表示應該取消
             
         Returns:
-            Position 物件，超時則返回 None
+            Position 物件，超時或取消則返回 None
         """
         if timeout is None:
             timeout = settings.default_timeout
@@ -330,6 +353,10 @@ class ImageFinder:
         start_time = time.time()
         
         while time.time() - start_time < timeout:
+            # 檢查是否應該取消
+            if cancel_check and cancel_check():
+                return None
+            
             position = self.find_on_screen(template_path, confidence)
             if position:
                 return position
@@ -343,6 +370,7 @@ class ImageFinder:
         timeout: float = None,
         interval: float = None,
         confidence: float = None,
+        cancel_check: callable = None,
     ) -> bool:
         """
         等待圖片消失
@@ -352,9 +380,10 @@ class ImageFinder:
             timeout: 超時時間（秒）
             interval: 檢查間隔（秒）
             confidence: 匹配信心度閾值
+            cancel_check: 可選的取消檢查函數，返回 True 表示應該取消
             
         Returns:
-            True 表示圖片已消失，False 表示超時
+            True 表示圖片已消失，False 表示超時或取消
         """
         if timeout is None:
             timeout = settings.default_timeout
@@ -364,6 +393,10 @@ class ImageFinder:
         start_time = time.time()
         
         while time.time() - start_time < timeout:
+            # 檢查是否應該取消
+            if cancel_check and cancel_check():
+                return False
+            
             position = self.find_on_screen(template_path, confidence)
             if position is None:
                 return True
@@ -372,10 +405,21 @@ class ImageFinder:
         return False
     
     def get_screen_size(self) -> Tuple[int, int]:
-        """取得螢幕尺寸"""
+        """取得所有螢幕的總尺寸（虛擬桌面大小）"""
         with mss.mss() as sct:
             monitor = sct.monitors[0]  # 所有螢幕的組合
             return (monitor["width"], monitor["height"])
+    
+    def get_virtual_screen_bounds(self) -> dict:
+        """取得虛擬螢幕的邊界（所有螢幕組合）"""
+        with mss.mss() as sct:
+            monitor = sct.monitors[0]
+            return {
+                "left": monitor["left"],
+                "top": monitor["top"],
+                "width": monitor["width"],
+                "height": monitor["height"],
+            }
     
     def get_monitors(self) -> List[dict]:
         """取得所有螢幕資訊"""
@@ -388,6 +432,7 @@ class ImageFinder:
                     "top": m["top"],
                     "width": m["width"],
                     "height": m["height"],
+                    "is_primary": m["left"] == 0 and m["top"] == 0,
                 })
             return monitors
 

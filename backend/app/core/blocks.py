@@ -135,7 +135,13 @@ class ClickImageExecutor(BlockExecutor):
         offset_y = block.params.get("offset_y", 0)
         
         context.log(f"尋找圖片: {image_path} (信心度: {confidence})")
-        position = await image_finder.wait_for_image(image_path, timeout=timeout, confidence=confidence)
+        position = await image_finder.wait_for_image(
+            image_path, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        
+        if context.should_stop:
+            return {"cancelled": True}
         
         if position:
             click_x = position.x + offset_x
@@ -169,7 +175,13 @@ class DoubleClickImageExecutor(BlockExecutor):
         confidence = block.params.get("confidence", settings.default_confidence)
         
         context.log(f"尋找圖片並雙擊: {image_path} (信心度: {confidence})")
-        position = await image_finder.wait_for_image(image_path, timeout=timeout, confidence=confidence)
+        position = await image_finder.wait_for_image(
+            image_path, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        
+        if context.should_stop:
+            return {"cancelled": True}
         
         if position:
             context.log(f"找到圖片 (匹配度: {position.confidence:.2%})，雙擊座標 ({position.x}, {position.y})")
@@ -188,7 +200,13 @@ class RightClickImageExecutor(BlockExecutor):
         confidence = block.params.get("confidence", settings.default_confidence)
         
         context.log(f"尋找圖片並右鍵點擊: {image_path} (信心度: {confidence})")
-        position = await image_finder.wait_for_image(image_path, timeout=timeout, confidence=confidence)
+        position = await image_finder.wait_for_image(
+            image_path, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        
+        if context.should_stop:
+            return {"cancelled": True}
         
         if position:
             context.log(f"找到圖片 (匹配度: {position.confidence:.2%})，右鍵點擊座標 ({position.x}, {position.y})")
@@ -257,12 +275,22 @@ class DragDropExecutor(BlockExecutor):
         context.log(f"拖放: {from_image} -> {to_image} (信心度: {confidence})")
         
         # 找到起點
-        from_pos = await image_finder.wait_for_image(from_image, timeout=timeout, confidence=confidence)
+        from_pos = await image_finder.wait_for_image(
+            from_image, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        if context.should_stop:
+            return {"cancelled": True}
         if not from_pos:
             raise TimeoutError(f"找不到起點圖片: {from_image}")
         
         # 找到終點
-        to_pos = await image_finder.wait_for_image(to_image, timeout=timeout, confidence=confidence)
+        to_pos = await image_finder.wait_for_image(
+            to_image, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        if context.should_stop:
+            return {"cancelled": True}
         if not to_pos:
             raise TimeoutError(f"找不到終點圖片: {to_image}")
         
@@ -282,7 +310,16 @@ class WaitExecutor(BlockExecutor):
         seconds = float(block.params.get("seconds", 1))
         
         context.log(f"等待 {seconds} 秒")
-        await asyncio.sleep(seconds)
+        
+        # 分段等待以便能夠響應停止指令
+        interval = 0.1  # 每 0.1 秒檢查一次
+        elapsed = 0.0
+        while elapsed < seconds:
+            if context.should_stop:
+                return {"cancelled": True}
+            await asyncio.sleep(min(interval, seconds - elapsed))
+            elapsed += interval
+        
         return {"seconds": seconds}
 
 
@@ -295,7 +332,13 @@ class WaitImageExecutor(BlockExecutor):
         confidence = block.params.get("confidence", settings.default_confidence)
         
         context.log(f"等待圖片出現: {image_path} (信心度: {confidence})")
-        position = await image_finder.wait_for_image(image_path, timeout=timeout, confidence=confidence)
+        position = await image_finder.wait_for_image(
+            image_path, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        
+        if context.should_stop:
+            return {"cancelled": True}
         
         if position:
             context.log(f"圖片已出現於 ({position.x}, {position.y})，匹配度: {position.confidence:.2%}")
@@ -313,7 +356,13 @@ class WaitImageGoneExecutor(BlockExecutor):
         confidence = block.params.get("confidence", settings.default_confidence)
         
         context.log(f"等待圖片消失: {image_path} (信心度: {confidence})")
-        result = await image_finder.wait_until_disappear(image_path, timeout=timeout, confidence=confidence)
+        result = await image_finder.wait_until_disappear(
+            image_path, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        
+        if context.should_stop:
+            return {"cancelled": True}
         
         if result:
             context.log("圖片已消失")
@@ -440,7 +489,13 @@ class SavePositionExecutor(BlockExecutor):
         confidence = block.params.get("confidence", settings.default_confidence)
         
         context.log(f"尋找圖片並儲存座標到變數 {variable_name} (信心度: {confidence})")
-        position = await image_finder.wait_for_image(image_path, timeout=timeout, confidence=confidence)
+        position = await image_finder.wait_for_image(
+            image_path, timeout=timeout, confidence=confidence,
+            cancel_check=lambda: context.should_stop
+        )
+        
+        if context.should_stop:
+            return {"cancelled": True}
         
         if position:
             context.set_variable(variable_name, position.to_dict())
