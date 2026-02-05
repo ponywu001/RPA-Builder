@@ -29,7 +29,27 @@ async_session_factory = async_sessionmaker(
 async def init_db() -> None:
     """初始化資料庫"""
     async with db_engine.begin() as conn:
+        # 建立所有資料表
         await conn.run_sync(Base.metadata.create_all)
+        
+        # 檢查並添加缺失的欄位（處理 schema 更新）
+        await _migrate_schema(conn)
+
+
+async def _migrate_schema(conn) -> None:
+    """檢查並遷移資料庫 schema"""
+    from sqlalchemy import text
+    
+    # 取得 scripts 資料表的現有欄位
+    result = await conn.execute(text("PRAGMA table_info(scripts)"))
+    columns = {row[1] for row in result.fetchall()}
+    
+    # 如果 folder_id 欄位不存在，添加它
+    if "folder_id" not in columns:
+        await conn.execute(text(
+            "ALTER TABLE scripts ADD COLUMN folder_id VARCHAR(36) REFERENCES folders(id)"
+        ))
+        print("[+] Added folder_id column to scripts table")
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

@@ -409,24 +409,27 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({
       renderer: 'zelos',
     })
     
-    // 為所有積木啟用右鍵選單和註解
-    Blockly.ContextMenuRegistry.registry.register({
-      displayText: () => '新增註解',
-      preconditionFn: (scope) => {
-        if (scope.block && !scope.block.getCommentIcon()) {
-          return 'enabled'
-        }
-        return 'hidden'
-      },
-      callback: (scope) => {
-        if (scope.block) {
-          scope.block.setCommentText('在此輸入註解...')
-        }
-      },
-      scopeType: Blockly.ContextMenuRegistry.ScopeType.BLOCK,
-      id: 'add_comment',
-      weight: 100,
-    })
+    // 為所有積木啟用右鍵選單和註解（先檢查是否已註冊，避免重複註冊錯誤）
+    const existingItem = Blockly.ContextMenuRegistry.registry.getItem('add_comment')
+    if (!existingItem) {
+      Blockly.ContextMenuRegistry.registry.register({
+        displayText: () => '新增註解',
+        preconditionFn: (scope) => {
+          if (scope.block && !scope.block.getCommentIcon()) {
+            return 'enabled'
+          }
+          return 'hidden'
+        },
+        callback: (scope) => {
+          if (scope.block) {
+            scope.block.setCommentText('在此輸入註解...')
+          }
+        },
+        scopeType: Blockly.ContextMenuRegistry.ScopeType.BLOCK,
+        id: 'add_comment',
+        weight: 100,
+      })
+    }
 
     // 監聽變更事件
     workspaceRef.current.addChangeListener((event) => {
