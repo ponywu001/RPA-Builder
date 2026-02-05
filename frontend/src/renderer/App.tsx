@@ -9,8 +9,11 @@ import BlocklyEditor from './components/BlocklyEditor'
 import PropertiesPanel from './components/PropertiesPanel'
 import ExecutionPanel from './components/ExecutionPanel'
 import ImageCapture from './components/ImageCapture'
+import CodePreviewPanel from './components/CodePreviewPanel'
+import RecorderPanel from './components/RecorderPanel'
 import { Script, ExecutionStatus, Template } from './types'
 import { api } from './services/api'
+import { wsService } from './services/websocket'
 
 const App: React.FC = () => {
   // 狀態
@@ -27,13 +30,94 @@ const App: React.FC = () => {
   const [templates, setTemplates] = useState<Template[]>([])
   const [isLoading, setIsLoading] = useState(true)
   
-  // Block 更新函數（由 BlocklyEditor 提供）
-  const [updateBlockFn, setUpdateBlockFn] = useState<((instanceId: string, fieldValues: Record<string, any>) => void) | null>(null)
+  // Workspace 操作函數（由 BlocklyEditor 提供）
+  const [workspaceActions, setWorkspaceActions] = useState<{
+    updateBlock: (instanceId: string, fieldValues: Record<string, any>) => void
+    undo: () => void
+    redo: () => void
+    canUndo: () => boolean
+    canRedo: () => boolean
+    highlightBlock: (instanceId: string | null) => void
+  } | null>(null)
+  
+  // Undo/Redo 狀態（需要定期更新）
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+  
+  // 當前執行的 Block ID
+  const [currentExecutingBlockId, setCurrentExecutingBlockId] = useState<string | null>(null)
+  
+  // 程式碼預覽面板顯示狀態
+  const [showCodePreview, setShowCodePreview] = useState(false)
+  
+  // 錄製面板顯示狀態
+  const [showRecorder, setShowRecorder] = useState(false)
+  
+  // 錄製狀態
+  const [isRecording, setIsRecording] = useState(false)
+  
+  // 定期檢查錄製狀態
+  useEffect(() => {
+    const checkRecordingStatus = async () => {
+      try {
+        const status = await api.getRecorderStatus()
+        setIsRecording(status.is_recording)
+      } catch {
+        // 忽略錯誤
+      }
+    }
+    
+    checkRecordingStatus()
+    const interval = setInterval(checkRecordingStatus, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   // 初始化
   useEffect(() => {
     loadData()
     setupEventListeners()
+    
+    // 初始化 WebSocket 連接
+    wsService.connect()
+    
+    // 訂閱 WebSocket 事件
+    const unsubUpdate = wsService.on('execution_update', (data) => {
+      setExecutionStatus(prev => prev ? {
+        ...prev,
+        status: data.status,
+        progress: {
+          current_step: data.progress.current_step,
+          total_steps: data.progress.total_steps,
+          current_block_id: data.current_block_id,
+        },
+        error: data.error,
+      } : null)
+      
+      setCurrentExecutingBlockId(data.current_block_id || null)
+      
+      // 執行結束時清除高亮並恢復視窗
+      if (!['running', 'paused'].includes(data.status)) {
+        setCurrentExecutingBlockId(null)
+        if (window.electronAPI) {
+          window.electronAPI.restoreWindow()
+        }
+      }
+      
+      // 如果有日誌更新
+      if (data.logs) {
+        setLogs(data.logs)
+      }
+    })
+    
+    const unsubLog = wsService.on('log', (logEntry) => {
+      setLogs(prev => [...prev, logEntry])
+    })
+    
+    return () => {
+      unsubUpdate()
+      unsubLog()
+      wsService.disconnect()
+    }
   }, [])
 
   const loadData = async () => {
@@ -146,6 +230,24 @@ const App: React.FC = () => {
     }
   }
 
+  const handleDuplicateScript = async (scriptId: string) => {
+    try {
+      const originalScript = scripts.find(s => s.id === scriptId)
+      if (!originalScript) return
+      
+      // 複製腳本
+      const newScript = await api.createScript({
+        name: `${originalScript.name} (複製)`,
+        blocks: originalScript.blocks,
+      })
+      
+      setScripts([newScript, ...scripts])
+      setCurrentScript(newScript)
+    } catch (error) {
+      console.error('複製腳本失敗:', error)
+    }
+  }
+
   // 執行操作（同步）
   const handleExecute = async () => {
     if (!currentScript) return
@@ -187,11 +289,30 @@ const App: React.FC = () => {
     try {
       const { execution_id } = await api.executeScriptAsync(currentScript.id)
       
-      // 輪詢狀態
+      // 訂閱 WebSocket 更新
+      wsService.subscribe(execution_id)
+      
+      // 設置初始狀態
+      setExecutionStatus({
+        execution_id,
+        script_id: currentScript.id,
+        script_name: currentScript.name,
+        status: 'running',
+        progress: {
+          current_step: 0,
+          total_steps: currentScript.blocks?.length || 0,
+        },
+        variables: {},
+      })
+      
+      // 備用：輪詢狀態（如果 WebSocket 不可用）
       const pollStatus = async () => {
         try {
           const status = await api.getExecutionStatus(execution_id)
           setExecutionStatus(status)
+          
+          // 更新當前執行的 Block ID
+          setCurrentExecutingBlockId(status.progress?.current_block_id || null)
           
           const logs = await api.getExecutionLogs(execution_id)
           setLogs(logs)
@@ -199,24 +320,44 @@ const App: React.FC = () => {
           if (status.status === 'running' || status.status === 'paused') {
             setTimeout(pollStatus, 500)
           } else {
-            // 執行結束，恢復視窗
+            // 執行結束
+            wsService.unsubscribe(execution_id)
+            setCurrentExecutingBlockId(null)
             if (window.electronAPI) {
               window.electronAPI.restoreWindow()
             }
           }
         } catch (error) {
           console.error('取得狀態失敗:', error)
-          // 發生錯誤也恢復視窗
+          wsService.unsubscribe(execution_id)
+          setCurrentExecutingBlockId(null)
           if (window.electronAPI) {
             window.electronAPI.restoreWindow()
           }
         }
       }
 
-      pollStatus()
+      // 如果 WebSocket 未連接，使用輪詢作為備用
+      if (!wsService.isConnected) {
+        pollStatus()
+      } else {
+        // 仍然輪詢日誌，因為 WebSocket 可能不發送完整日誌
+        const pollLogs = async () => {
+          try {
+            const status = await api.getExecutionStatus(execution_id)
+            if (status.status === 'running' || status.status === 'paused') {
+              const logs = await api.getExecutionLogs(execution_id)
+              setLogs(logs)
+              setTimeout(pollLogs, 1000)
+            }
+          } catch (error) {
+            // 忽略錯誤
+          }
+        }
+        setTimeout(pollLogs, 500)
+      }
     } catch (error) {
       console.error('執行腳本失敗:', error)
-      // 執行失敗也恢復視窗
       if (window.electronAPI) {
         window.electronAPI.restoreWindow()
       }
@@ -269,7 +410,7 @@ const App: React.FC = () => {
       setTemplates(templatesData)
       
       // 如果有目標 block，更新其圖片路徑和偏移值
-      if (captureConfig.targetBlockInstanceId && updateBlockFn) {
+      if (captureConfig.targetBlockInstanceId && workspaceActions) {
         const fieldValues: Record<string, any> = {
           IMAGE_PATH: result.path || `${name}.png`,
         }
@@ -277,7 +418,7 @@ const App: React.FC = () => {
           fieldValues.OFFSET_X = offsetX
           fieldValues.OFFSET_Y = offsetY
         }
-        updateBlockFn(captureConfig.targetBlockInstanceId, fieldValues)
+        workspaceActions.updateBlock(captureConfig.targetBlockInstanceId, fieldValues)
       }
     } catch (error) {
       console.error('儲存截圖失敗:', error)
@@ -297,6 +438,46 @@ const App: React.FC = () => {
   const handleBlockSelect = useCallback((block: any) => {
     setSelectedBlock(block)
   }, [])
+
+  // Undo/Redo 處理
+  const handleUndo = useCallback(() => {
+    if (workspaceActions) {
+      workspaceActions.undo()
+      // 延遲更新狀態
+      setTimeout(() => {
+        setCanUndo(workspaceActions.canUndo())
+        setCanRedo(workspaceActions.canRedo())
+      }, 10)
+    }
+  }, [workspaceActions])
+
+  const handleRedo = useCallback(() => {
+    if (workspaceActions) {
+      workspaceActions.redo()
+      // 延遲更新狀態
+      setTimeout(() => {
+        setCanUndo(workspaceActions.canUndo())
+        setCanRedo(workspaceActions.canRedo())
+      }, 10)
+    }
+  }, [workspaceActions])
+
+  // 定期更新 undo/redo 狀態
+  useEffect(() => {
+    if (!workspaceActions) return
+    
+    const updateUndoRedoState = () => {
+      setCanUndo(workspaceActions.canUndo())
+      setCanRedo(workspaceActions.canRedo())
+    }
+    
+    // 初始更新
+    updateUndoRedoState()
+    
+    // 定期更新
+    const interval = setInterval(updateUndoRedoState, 500)
+    return () => clearInterval(interval)
+  }, [workspaceActions])
 
   // 載入中
   if (isLoading) {
@@ -322,6 +503,13 @@ const App: React.FC = () => {
         onResume={handleResume}
         onNewScript={handleNewScript}
         onCapture={() => setIsCapturing(true)}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onRecord={() => setShowRecorder(!showRecorder)}
+        isRecording={isRecording}
+        onToggleCodePreview={() => setShowCodePreview(!showCodePreview)}
       />
 
       {/* 主要內容區 */}
@@ -335,6 +523,7 @@ const App: React.FC = () => {
           onDeleteScript={handleDeleteScript}
           onRenameScript={handleRenameScript}
           onExportScript={handleExportScript}
+          onDuplicateScript={handleDuplicateScript}
           onNewScript={handleNewScript}
           onRefreshTemplates={loadData}
         />
@@ -346,7 +535,8 @@ const App: React.FC = () => {
               script={currentScript}
               onSave={handleSaveScript}
               onBlockSelect={handleBlockSelect}
-              onWorkspaceReady={(updateFn) => setUpdateBlockFn(() => updateFn)}
+              onWorkspaceReady={(actions) => setWorkspaceActions(actions)}
+              currentExecutingBlockId={currentExecutingBlockId}
             />
           </div>
 
@@ -363,13 +553,38 @@ const App: React.FC = () => {
           templates={templates}
           onUpdate={(fieldValues) => {
             // 更新 Blockly 積木的欄位值
-            if (selectedBlock && updateBlockFn) {
-              updateBlockFn(selectedBlock.instance_id, fieldValues)
+            if (selectedBlock && workspaceActions) {
+              workspaceActions.updateBlock(selectedBlock.instance_id, fieldValues)
             }
           }}
           onStartCapture={handleStartCapture}
         />
       </div>
+
+      {/* 程式碼預覽面板 */}
+      <CodePreviewPanel
+        script={currentScript}
+        isVisible={showCodePreview}
+        onToggle={() => setShowCodePreview(!showCodePreview)}
+      />
+
+      {/* 錄製面板 */}
+      <RecorderPanel
+        isVisible={showRecorder}
+        onToggle={() => setShowRecorder(!showRecorder)}
+        onInsertBlocks={async (blocks) => {
+          if (!currentScript) return
+          // 將錄製的 blocks 添加到當前腳本
+          const updatedBlocks = [...(currentScript.blocks || []), ...blocks]
+          try {
+            const updatedScript = await api.updateScript(currentScript.id, { blocks: updatedBlocks })
+            setCurrentScript(updatedScript)
+            setScripts(scripts.map(s => s.id === updatedScript.id ? updatedScript : s))
+          } catch (error) {
+            console.error('插入錄製動作失敗:', error)
+          }
+        }}
+      />
 
       {/* 截圖覆蓋層 */}
       {isCapturing && (

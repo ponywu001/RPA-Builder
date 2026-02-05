@@ -172,6 +172,94 @@ export const api = {
     })
   },
 
+  async stepExecution(executionId: string): Promise<void> {
+    await request(`/executions/${executionId}/step`, {
+      method: 'POST',
+    })
+  },
+
+  async setBreakpoint(executionId: string, blockInstanceId: string): Promise<void> {
+    await request(`/executions/${executionId}/breakpoint?block_instance_id=${blockInstanceId}`, {
+      method: 'POST',
+    })
+  },
+
+  async removeBreakpoint(executionId: string, blockInstanceId: string): Promise<void> {
+    await request(`/executions/${executionId}/breakpoint?block_instance_id=${blockInstanceId}`, {
+      method: 'DELETE',
+    })
+  },
+
+  async setDebugMode(executionId: string, enabled: boolean): Promise<void> {
+    await request(`/executions/${executionId}/debug?enabled=${enabled}`, {
+      method: 'POST',
+    })
+  },
+
+  async getVariables(executionId: string): Promise<Record<string, any>> {
+    const data = await request<{ variables: Record<string, any> }>(`/executions/${executionId}/variables`)
+    return data.variables
+  },
+
+  // ==================== 錄製 ====================
+
+  async getRecorderStatus(): Promise<{ is_recording: boolean; action_count: number }> {
+    return request('/recorder/status')
+  },
+
+  async startRecording(autoScreenshot: boolean = true): Promise<void> {
+    await request('/recorder/start', {
+      method: 'POST',
+      body: JSON.stringify({ auto_screenshot: autoScreenshot }),
+    })
+  },
+
+  async stopRecording(): Promise<{ action_count: number }> {
+    const data = await request<{ action_count: number }>('/recorder/stop', {
+      method: 'POST',
+    })
+    return data
+  },
+
+  async clearRecording(): Promise<void> {
+    await request('/recorder/clear', { method: 'POST' })
+  },
+
+  async getRecordedActions(): Promise<any[]> {
+    const data = await request<{ actions: any[] }>('/recorder/actions')
+    return data.actions
+  },
+
+  async getRecordedBlocks(): Promise<any[]> {
+    const data = await request<{ blocks: any[] }>('/recorder/blocks')
+    return data.blocks
+  },
+
+  // ==================== 排程 ====================
+
+  async getSchedules(): Promise<any[]> {
+    return request('/schedules')
+  },
+
+  async createSchedule(schedule: any): Promise<any> {
+    return request('/schedules', {
+      method: 'POST',
+      body: JSON.stringify(schedule),
+    })
+  },
+
+  async deleteSchedule(scheduleId: string): Promise<void> {
+    await request(`/schedules/${scheduleId}`, { method: 'DELETE' })
+  },
+
+  async enableSchedule(scheduleId: string): Promise<void> {
+    await request(`/schedules/${scheduleId}/enable`, { method: 'POST' })
+  },
+
+  async disableSchedule(scheduleId: string): Promise<void> {
+    await request(`/schedules/${scheduleId}/disable`, { method: 'POST' })
+  },
+
   async getExecutions(params?: {
     script_id?: string
     status?: string
@@ -258,4 +346,43 @@ export const api = {
     const data = await request<{ blocks: BlockDefinition[] }>(`/blocks/${category}`)
     return data.blocks
   },
+
+  // ==================== 資料夾 ====================
+
+  async getFolders(): Promise<Folder[]> {
+    return request<Folder[]>('/folders')
+  },
+
+  async createFolder(data: { name: string; parent_id?: string }): Promise<Folder> {
+    return request<Folder>('/folders', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  async updateFolder(folderId: string, data: { name?: string; parent_id?: string }): Promise<Folder> {
+    return request<Folder>(`/folders/${folderId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  },
+
+  async deleteFolder(folderId: string): Promise<void> {
+    await request(`/folders/${folderId}`, { method: 'DELETE' })
+  },
+
+  async moveScriptToFolder(scriptId: string, folderId: string | null): Promise<Script> {
+    return request<Script>(`/scripts/${scriptId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ folder_id: folderId }),
+    })
+  },
+}
+
+// 資料夾類型
+export interface Folder {
+  id: string
+  name: string
+  parent_id: string | null
+  created_at: string
 }

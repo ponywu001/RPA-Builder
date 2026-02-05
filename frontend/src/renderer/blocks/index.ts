@@ -519,6 +519,1055 @@ export function initBlocks(): void {
       } as BlockJson)
     }
   }
+
+  // 發送 Email
+  Blockly.Blocks['send_email'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'send_email',
+        message0: '發送郵件 收件人 %1 主旨 %2',
+        args0: [
+          { type: 'field_input', name: 'TO', text: '' },
+          { type: 'field_input', name: 'SUBJECT', text: '' },
+        ],
+        message1: '內容 %1',
+        args1: [
+          { type: 'field_input', name: 'BODY', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#EC4899',
+        tooltip: '發送 Email 通知',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 錯誤重試
+  Blockly.Blocks['retry'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'retry',
+        message0: '重試 %1 次 (間隔 %2 秒)',
+        args0: [
+          { type: 'field_number', name: 'TIMES', value: 3 },
+          { type: 'field_number', name: 'INTERVAL', value: 1 },
+        ],
+        message1: '執行 %1',
+        args1: [
+          { type: 'input_statement', name: 'DO' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#8B5CF6',
+        tooltip: '失敗時自動重試',
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 檔案操作 ====================
+
+  // 讀取檔案
+  Blockly.Blocks['read_file'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'read_file',
+        message0: '讀取檔案 %1',
+        args0: [
+          { type: 'field_input', name: 'FILE_PATH', text: 'file.txt' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '讀取檔案內容',
+      } as BlockJson)
+    }
+  }
+
+  // 寫入檔案
+  Blockly.Blocks['write_file'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'write_file',
+        message0: '%1 到檔案 %2 內容: %3',
+        args0: [
+          { type: 'field_dropdown', name: 'APPEND', options: [['寫入', 'false'], ['附加', 'true']] },
+          { type: 'field_input', name: 'FILE_PATH', text: 'file.txt' },
+          { type: 'field_input', name: 'CONTENT', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '寫入或附加內容到檔案',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 複製檔案
+  Blockly.Blocks['copy_file'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'copy_file',
+        message0: '複製 %1 到 %2',
+        args0: [
+          { type: 'field_input', name: 'SOURCE', text: '' },
+          { type: 'field_input', name: 'DESTINATION', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '複製檔案或資料夾',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 移動檔案
+  Blockly.Blocks['move_file'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'move_file',
+        message0: '移動 %1 到 %2',
+        args0: [
+          { type: 'field_input', name: 'SOURCE', text: '' },
+          { type: 'field_input', name: 'DESTINATION', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '移動檔案或資料夾',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 刪除檔案
+  Blockly.Blocks['delete_file'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'delete_file',
+        message0: '刪除 %1',
+        args0: [
+          { type: 'field_input', name: 'FILE_PATH', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '刪除檔案或資料夾',
+      } as BlockJson)
+    }
+  }
+
+  // 檔案存在
+  Blockly.Blocks['file_exists'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'file_exists',
+        message0: '如果檔案 %1 存在',
+        args0: [
+          { type: 'field_input', name: 'FILE_PATH', text: '' },
+        ],
+        message1: '執行 %1',
+        args1: [
+          { type: 'input_statement', name: 'DO' },
+        ],
+        message2: '否則 %1',
+        args2: [
+          { type: 'input_statement', name: 'ELSE' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#8B5CF6',
+        tooltip: '檢查檔案是否存在',
+      } as BlockJson)
+    }
+  }
+
+  // 列出檔案
+  Blockly.Blocks['list_files'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'list_files',
+        message0: '列出目錄 %1 的檔案 (模式: %2)',
+        args0: [
+          { type: 'field_input', name: 'DIRECTORY', text: '' },
+          { type: 'field_input', name: 'PATTERN', text: '*' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '列出目錄下的檔案',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // ==================== Excel 操作 ====================
+
+  // 讀取 Excel
+  Blockly.Blocks['excel_read'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'excel_read',
+        message0: '讀取 Excel %1 工作表 %2 存入 %3',
+        args0: [
+          { type: 'field_input', name: 'FILE_PATH', text: 'data.xlsx' },
+          { type: 'field_input', name: 'SHEET', text: 'Sheet1' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'data' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '讀取 Excel 檔案到變數（列表格式）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 寫入 Excel
+  Blockly.Blocks['excel_write'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'excel_write',
+        message0: '寫入 Excel %1 工作表 %2 資料 %3',
+        args0: [
+          { type: 'field_input', name: 'FILE_PATH', text: 'output.xlsx' },
+          { type: 'field_input', name: 'SHEET', text: 'Sheet1' },
+          { type: 'field_input', name: 'DATA_VAR', text: 'data' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '將資料寫入 Excel 檔案',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 讀取 Excel 儲存格
+  Blockly.Blocks['excel_read_cell'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'excel_read_cell',
+        message0: '讀取 Excel %1 工作表 %2 儲存格 %3 存入 %4',
+        args0: [
+          { type: 'field_input', name: 'FILE_PATH', text: 'data.xlsx' },
+          { type: 'field_input', name: 'SHEET', text: 'Sheet1' },
+          { type: 'field_input', name: 'CELL', text: 'A1' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'value' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '讀取 Excel 指定儲存格的值',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 寫入 Excel 儲存格
+  Blockly.Blocks['excel_write_cell'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'excel_write_cell',
+        message0: '寫入 Excel %1 工作表 %2 儲存格 %3 值 %4',
+        args0: [
+          { type: 'field_input', name: 'FILE_PATH', text: 'data.xlsx' },
+          { type: 'field_input', name: 'SHEET', text: 'Sheet1' },
+          { type: 'field_input', name: 'CELL', text: 'A1' },
+          { type: 'field_input', name: 'VALUE', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '寫入 Excel 指定儲存格',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 錯誤處理 ====================
+
+  // Try-Catch
+  Blockly.Blocks['try_catch'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'try_catch',
+        message0: '嘗試執行',
+        message1: '%1',
+        args1: [
+          { type: 'input_statement', name: 'DO' },
+        ],
+        message2: '如果發生錯誤',
+        message3: '%1',
+        args3: [
+          { type: 'input_statement', name: 'ELSE' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#8B5CF6',
+        tooltip: 'Try-Catch 錯誤處理，錯誤資訊存入 _error 變數',
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 迴圈增強 ====================
+
+  // For Each
+  Blockly.Blocks['for_each'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'for_each',
+        message0: '遍歷列表 %1 (項目變數: %2)',
+        args0: [
+          { type: 'field_input', name: 'LIST', text: '["a", "b", "c"]' },
+          { type: 'field_input', name: 'VARIABLE_NAME', text: 'item' },
+        ],
+        message1: '%1',
+        args1: [
+          { type: 'input_statement', name: 'DO' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#8B5CF6',
+        tooltip: '遍歷列表中的每個項目',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 字串處理 ====================
+
+  // 字串拼接（舊版，保留兼容）
+  Blockly.Blocks['string_concat'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_concat',
+        message0: '拼接 %1 + %2 (分隔符: %3) 存入 %4',
+        args0: [
+          { type: 'field_input', name: 'STRING1', text: '' },
+          { type: 'field_input', name: 'STRING2', text: '' },
+          { type: 'field_input', name: 'SEPARATOR', text: '' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'result' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '拼接兩個字串並存入變數',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 字串拼接 V2（可拖放變數）
+  Blockly.Blocks['string_concat_v2'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_concat_v2',
+        message0: '拼接 %1 + %2 存入 %3',
+        args0: [
+          { type: 'input_value', name: 'STRING1', check: ['String', 'Number'] },
+          { type: 'input_value', name: 'STRING2', check: ['String', 'Number'] },
+          { type: 'field_input', name: 'VAR_NAME', text: 'result' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '拼接兩個值並存入變數（可拖入變數積木）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 文字值（可拖放）
+  Blockly.Blocks['text_value'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'text_value',
+        message0: '"%1"',
+        args0: [
+          { type: 'field_input', name: 'VALUE', text: '' },
+        ],
+        output: 'String',
+        colour: '#F59E0B',
+        tooltip: '文字值',
+      } as BlockJson)
+    }
+  }
+
+  // 數字值（可拖放）
+  Blockly.Blocks['number_value'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'number_value',
+        message0: '%1',
+        args0: [
+          { type: 'field_number', name: 'VALUE', value: 0 },
+        ],
+        output: 'Number',
+        colour: '#F59E0B',
+        tooltip: '數字值',
+      } as BlockJson)
+    }
+  }
+
+  // 字串分割
+  Blockly.Blocks['string_split'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_split',
+        message0: '分割 %1 (分隔符: %2) 存入 %3',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '' },
+          { type: 'field_input', name: 'SEPARATOR', text: ',' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'result' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '分割字串為列表',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 字串分割 V2（可拖放變數）
+  Blockly.Blocks['string_split_v2'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_split_v2',
+        message0: '分割 %1 (分隔符: %2) 存入 %3',
+        args0: [
+          { type: 'input_value', name: 'TEXT', check: ['String', 'Number'] },
+          { type: 'field_input', name: 'SEPARATOR', text: ',' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'result' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '分割字串為列表（可拖入變數積木）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 字串替換
+  Blockly.Blocks['string_replace'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_replace',
+        message0: '在 %1 中將 %2 替換為 %3 存入 %4',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '' },
+          { type: 'field_input', name: 'SEARCH', text: '' },
+          { type: 'field_input', name: 'REPLACE', text: '' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'result' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '替換字串內容並存入變數',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 字串替換 V2（可拖放變數）
+  Blockly.Blocks['string_replace_v2'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_replace_v2',
+        message0: '在 %1 中將 %2 替換為 %3 存入 %4',
+        args0: [
+          { type: 'input_value', name: 'TEXT', check: ['String', 'Number'] },
+          { type: 'input_value', name: 'SEARCH', check: ['String', 'Number'] },
+          { type: 'input_value', name: 'REPLACE', check: ['String', 'Number'] },
+          { type: 'field_input', name: 'VAR_NAME', text: 'result' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '替換字串內容並存入變數（可拖入變數積木）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 正則匹配
+  Blockly.Blocks['string_match'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_match',
+        message0: '在 %1 中匹配正則 %2 存入 %3',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '' },
+          { type: 'field_input', name: 'PATTERN', text: '' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'matches' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '正則表達式匹配',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 正則匹配 V2（可拖放變數）
+  Blockly.Blocks['string_match_v2'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_match_v2',
+        message0: '在 %1 中匹配正則 %2 存入 %3',
+        args0: [
+          { type: 'input_value', name: 'TEXT', check: ['String', 'Number'] },
+          { type: 'field_input', name: 'PATTERN', text: '' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'matches' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '正則表達式匹配（可拖入變數積木）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 字串格式化
+  Blockly.Blocks['string_format'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'string_format',
+        message0: '格式化模板 %1',
+        args0: [
+          { type: 'field_input', name: 'TEMPLATE', text: '${var1} - ${var2}' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '格式化字串模板，使用 ${變數名} 引用變數',
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 數學運算 ====================
+
+  // 數學運算
+  Blockly.Blocks['math_operation'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'math_operation',
+        message0: '%1 %2 %3 存入 %4',
+        args0: [
+          { type: 'field_input', name: 'A', text: '' },
+          { type: 'field_dropdown', name: 'OPERATION', options: [['＋', 'add'], ['－', 'subtract'], ['×', 'multiply'], ['÷', 'divide'], ['%', 'modulo'], ['^', 'power']] },
+          { type: 'field_input', name: 'B', text: '' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'result' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '執行數學運算並存入變數（可使用 ${變數名} 引用變數）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 隨機數
+  Blockly.Blocks['random_number'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'random_number',
+        message0: '隨機數 (最小: %1 最大: %2 %3) 存入 %4',
+        args0: [
+          { type: 'field_number', name: 'MIN', value: 0 },
+          { type: 'field_number', name: 'MAX', value: 100 },
+          { type: 'field_dropdown', name: 'INTEGER', options: [['整數', 'true'], ['小數', 'false']] },
+          { type: 'field_input', name: 'VAR_NAME', text: 'random' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '生成隨機數並存入變數',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+
+  // ==================== 剪貼簿 ====================
+
+  // 讀取剪貼簿
+  Blockly.Blocks['clipboard_read'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'clipboard_read',
+        message0: '讀取剪貼簿',
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '讀取剪貼簿內容',
+      } as BlockJson)
+    }
+  }
+
+  // 寫入剪貼簿
+  Blockly.Blocks['clipboard_write'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'clipboard_write',
+        message0: '寫入剪貼簿 %1',
+        args0: [
+          { type: 'field_input', name: 'CONTENT', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '寫入內容到剪貼簿',
+      } as BlockJson)
+    }
+  }
+
+  // ==================== JSON 操作 ====================
+
+  // 解析 JSON
+  Blockly.Blocks['json_parse'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'json_parse',
+        message0: '解析 JSON %1',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '{}' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '解析 JSON 字串',
+      } as BlockJson)
+    }
+  }
+
+  // 轉換 JSON
+  Blockly.Blocks['json_stringify'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'json_stringify',
+        message0: '轉換為 JSON %1 %2',
+        args0: [
+          { type: 'field_input', name: 'DATA', text: '${data}' },
+          { type: 'field_dropdown', name: 'PRETTY', options: [['壓縮', 'false'], ['美化', 'true']] },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '轉換為 JSON 字串',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 取得 JSON 值
+  Blockly.Blocks['json_get_value'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'json_get_value',
+        message0: '從 %1 取得 %2',
+        args0: [
+          { type: 'field_input', name: 'DATA', text: '${json}' },
+          { type: 'field_input', name: 'PATH', text: 'key.subkey' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F59E0B',
+        tooltip: '從 JSON 取得值（支援點號路徑如 user.name）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 視窗控制 ====================
+
+  // 取得視窗
+  Blockly.Blocks['get_window'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'get_window',
+        message0: '取得視窗 %1',
+        args0: [
+          { type: 'field_input', name: 'TITLE', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '取得視窗資訊',
+      } as BlockJson)
+    }
+  }
+
+  // 啟用視窗
+  Blockly.Blocks['activate_window'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'activate_window',
+        message0: '啟用視窗 %1',
+        args0: [
+          { type: 'field_input', name: 'TITLE', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '啟用（聚焦）視窗',
+      } as BlockJson)
+    }
+  }
+
+  // 關閉視窗
+  Blockly.Blocks['close_window'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'close_window',
+        message0: '關閉視窗 %1',
+        args0: [
+          { type: 'field_input', name: 'TITLE', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '關閉視窗',
+      } as BlockJson)
+    }
+  }
+
+  // 調整視窗大小
+  Blockly.Blocks['resize_window'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'resize_window',
+        message0: '調整視窗 %1 大小為 %2 x %3',
+        args0: [
+          { type: 'field_input', name: 'TITLE', text: '' },
+          { type: 'field_number', name: 'WIDTH', value: 800 },
+          { type: 'field_number', name: 'HEIGHT', value: 600 },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '調整視窗大小',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 移動視窗
+  Blockly.Blocks['move_window'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'move_window',
+        message0: '移動視窗 %1 到 X: %2 Y: %3',
+        args0: [
+          { type: 'field_input', name: 'TITLE', text: '' },
+          { type: 'field_number', name: 'X', value: 0 },
+          { type: 'field_number', name: 'Y', value: 0 },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#10B981',
+        tooltip: '移動視窗位置',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // ==================== OCR ====================
+
+  // OCR 讀取文字
+  Blockly.Blocks['ocr_read_text'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'ocr_read_text',
+        message0: 'OCR 讀取螢幕文字 (語言: %1)',
+        args0: [
+          { type: 'field_input', name: 'LANGUAGE', text: 'eng+chi_tra' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#EC4899',
+        tooltip: '使用 OCR 讀取螢幕上的所有文字',
+      } as BlockJson)
+    }
+  }
+
+  // OCR 尋找文字
+  Blockly.Blocks['ocr_find_text'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'ocr_find_text',
+        message0: 'OCR 尋找文字 %1 (語言: %2)',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '' },
+          { type: 'field_input', name: 'LANGUAGE', text: 'eng+chi_tra' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#EC4899',
+        tooltip: '使用 OCR 尋找文字位置',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // OCR 點擊文字
+  Blockly.Blocks['ocr_click_text'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'ocr_click_text',
+        message0: 'OCR 點擊文字 %1 (語言: %2 超時: %3 秒)',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '' },
+          { type: 'field_input', name: 'LANGUAGE', text: 'eng+chi_tra' },
+          { type: 'field_number', name: 'TIMEOUT', value: 30, min: 1 },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#EC4899',
+        tooltip: '使用 OCR 尋找並點擊文字',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // OCR 等待文字
+  Blockly.Blocks['ocr_wait_text'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'ocr_wait_text',
+        message0: 'OCR 等待文字 %1 出現 (語言: %2 超時: %3 秒)',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '' },
+          { type: 'field_input', name: 'LANGUAGE', text: 'eng+chi_tra' },
+          { type: 'field_number', name: 'TIMEOUT', value: 30, min: 1 },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#EC4899',
+        tooltip: '等待直到指定文字出現',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // 如果 OCR 文字存在
+  Blockly.Blocks['if_ocr_text_exists'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'if_ocr_text_exists',
+        message0: '如果 OCR 文字 %1 存在 (語言: %2)',
+        args0: [
+          { type: 'field_input', name: 'TEXT', text: '' },
+          { type: 'field_input', name: 'LANGUAGE', text: 'eng+chi_tra' },
+        ],
+        message1: '執行 %1',
+        args1: [
+          { type: 'input_statement', name: 'DO' },
+        ],
+        message2: '否則 %1',
+        args2: [
+          { type: 'input_statement', name: 'ELSE' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#EC4899',
+        tooltip: '使用 OCR 檢查文字是否存在',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 瀏覽器自動化 ====================
+
+  Blockly.Blocks['browser_open'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'browser_open',
+        message0: '開啟瀏覽器 %1 儲存為 %2',
+        args0: [
+          { type: 'field_dropdown', name: 'BROWSER', options: [['Chrome', 'chromium'], ['Firefox', 'firefox'], ['Edge', 'webkit']] },
+          { type: 'field_input', name: 'VAR_NAME', text: 'browser' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#06B6D4',
+        tooltip: '開啟瀏覽器（需要 Playwright）',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['browser_goto'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'browser_goto',
+        message0: '前往網址 %1',
+        args0: [
+          { type: 'field_input', name: 'URL', text: 'https://' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#06B6D4',
+        tooltip: '前往指定網址',
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['browser_click'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'browser_click',
+        message0: '點擊元素 %1',
+        args0: [
+          { type: 'field_input', name: 'SELECTOR', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#06B6D4',
+        tooltip: '點擊網頁元素（CSS 選擇器）',
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['browser_type'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'browser_type',
+        message0: '在元素 %1 輸入 %2',
+        args0: [
+          { type: 'field_input', name: 'SELECTOR', text: '' },
+          { type: 'field_input', name: 'TEXT', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#06B6D4',
+        tooltip: '在網頁元素中輸入文字',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['browser_get_text'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'browser_get_text',
+        message0: '取得元素 %1 的文字 存入 %2',
+        args0: [
+          { type: 'field_input', name: 'SELECTOR', text: '' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'text' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#06B6D4',
+        tooltip: '取得網頁元素的文字內容',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['browser_screenshot'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'browser_screenshot',
+        message0: '瀏覽器截圖 儲存到 %1',
+        args0: [
+          { type: 'field_input', name: 'PATH', text: 'screenshot.png' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#06B6D4',
+        tooltip: '擷取瀏覽器畫面',
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['browser_close'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'browser_close',
+        message0: '關閉瀏覽器',
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#06B6D4',
+        tooltip: '關閉瀏覽器',
+      } as BlockJson)
+    }
+  }
+
+  // ==================== 資料庫操作 ====================
+
+  Blockly.Blocks['db_connect'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'db_connect',
+        message0: '連接資料庫 %1 路徑 %2 儲存為 %3',
+        args0: [
+          { type: 'field_dropdown', name: 'TYPE', options: [['SQLite', 'sqlite'], ['MySQL', 'mysql'], ['PostgreSQL', 'postgresql']] },
+          { type: 'field_input', name: 'CONNECTION', text: 'database.db' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'db' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F97316',
+        tooltip: '連接資料庫',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['db_query'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'db_query',
+        message0: '查詢 SQL %1 結果存入 %2',
+        args0: [
+          { type: 'field_input', name: 'SQL', text: 'SELECT * FROM table' },
+          { type: 'field_input', name: 'VAR_NAME', text: 'results' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F97316',
+        tooltip: '執行 SQL 查詢',
+        inputsInline: true,
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['db_execute'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'db_execute',
+        message0: '執行 SQL %1',
+        args0: [
+          { type: 'field_input', name: 'SQL', text: '' },
+        ],
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F97316',
+        tooltip: '執行 SQL 語句（INSERT/UPDATE/DELETE）',
+      } as BlockJson)
+    }
+  }
+
+  Blockly.Blocks['db_close'] = {
+    init: function() {
+      this.jsonInit({
+        type: 'db_close',
+        message0: '關閉資料庫連接',
+        previousStatement: null,
+        nextStatement: null,
+        colour: '#F97316',
+        tooltip: '關閉資料庫連接',
+      } as BlockJson)
+    }
+  }
 }
 
 /**

@@ -14,6 +14,16 @@ interface HeaderProps {
   onResume: () => void
   onNewScript: () => void
   onCapture: () => void
+  // Undo/Redo
+  onUndo?: () => void
+  onRedo?: () => void
+  canUndo?: boolean
+  canRedo?: boolean
+  // 錄製
+  onRecord?: () => void
+  isRecording?: boolean
+  // 程式碼預覽
+  onToggleCodePreview?: () => void
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -25,6 +35,13 @@ const Header: React.FC<HeaderProps> = ({
   onResume,
   onNewScript,
   onCapture,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  onRecord,
+  isRecording = false,
+  onToggleCodePreview,
 }) => {
   const isRunning = executionStatus?.status === 'running'
   const isPaused = executionStatus?.status === 'paused'
@@ -86,6 +103,33 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* 工具按鈕 */}
       <div className="flex items-center gap-2">
+        {/* Undo/Redo 按鈕 */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="p-2 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-700"
+            title="復原 (Ctrl+Z)"
+          >
+            <svg className="w-4 h-4 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="p-2 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-700"
+            title="重做 (Ctrl+Y)"
+          >
+            <svg className="w-4 h-4 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 分隔線 */}
+        <div className="w-px h-6 mx-1" style={{ background: 'rgba(71, 85, 105, 0.5)' }} />
+
         {/* 截圖按鈕 */}
         <button
           onClick={onCapture}
@@ -109,6 +153,39 @@ const Header: React.FC<HeaderProps> = ({
           </svg>
           <span>新增</span>
         </button>
+
+        {/* 錄製按鈕 */}
+        {onRecord && (
+          <button
+            onClick={onRecord}
+            className={`btn flex items-center gap-2 ${isRecording ? 'btn-danger animate-pulse' : 'btn-secondary'}`}
+            title="錄製操作"
+          >
+            <svg className="w-4 h-4" fill={isRecording ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" strokeWidth={2} />
+              {isRecording ? (
+                <rect x="8" y="8" width="8" height="8" rx="1" />
+              ) : (
+                <circle cx="12" cy="12" r="4" fill="currentColor" />
+              )}
+            </svg>
+            <span>{isRecording ? '停止錄製' : '錄製'}</span>
+          </button>
+        )}
+
+        {/* 程式碼預覽 */}
+        {onToggleCodePreview && (
+          <button
+            onClick={onToggleCodePreview}
+            className="btn btn-secondary flex items-center gap-2"
+            title="程式碼預覽"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            <span>程式碼</span>
+          </button>
+        )}
 
         {/* 分隔線 */}
         <div className="w-px h-6 mx-2"

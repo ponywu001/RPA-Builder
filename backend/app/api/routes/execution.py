@@ -219,6 +219,92 @@ async def resume_execution(
     return SuccessResponse(success=True)
 
 
+@executions_router.post("/{execution_id}/step", response_model=SuccessResponse)
+async def step_execution(
+    execution_id: str,
+    engine: ScriptEngine = Depends(get_engine),
+    _: bool = Depends(verify_api_key),
+):
+    """單步執行"""
+    success = engine.step(execution_id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"無法單步執行: {execution_id}",
+        )
+    
+    return SuccessResponse(success=True)
+
+
+@executions_router.post("/{execution_id}/breakpoint", response_model=SuccessResponse)
+async def set_breakpoint(
+    execution_id: str,
+    block_instance_id: str,
+    engine: ScriptEngine = Depends(get_engine),
+    _: bool = Depends(verify_api_key),
+):
+    """設置斷點"""
+    success = engine.set_breakpoint(execution_id, block_instance_id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"執行紀錄不存在: {execution_id}",
+        )
+    
+    return SuccessResponse(success=True)
+
+
+@executions_router.delete("/{execution_id}/breakpoint", response_model=SuccessResponse)
+async def remove_breakpoint(
+    execution_id: str,
+    block_instance_id: str,
+    engine: ScriptEngine = Depends(get_engine),
+    _: bool = Depends(verify_api_key),
+):
+    """移除斷點"""
+    success = engine.remove_breakpoint(execution_id, block_instance_id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"執行紀錄不存在: {execution_id}",
+        )
+    
+    return SuccessResponse(success=True)
+
+
+@executions_router.post("/{execution_id}/debug", response_model=SuccessResponse)
+async def set_debug_mode(
+    execution_id: str,
+    enabled: bool = True,
+    engine: ScriptEngine = Depends(get_engine),
+    _: bool = Depends(verify_api_key),
+):
+    """設置除錯模式"""
+    success = engine.set_debug_mode(execution_id, enabled)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"執行紀錄不存在: {execution_id}",
+        )
+    
+    return SuccessResponse(success=True)
+
+
+@executions_router.get("/{execution_id}/variables")
+async def get_variables(
+    execution_id: str,
+    engine: ScriptEngine = Depends(get_engine),
+    _: bool = Depends(verify_api_key),
+):
+    """取得執行變數"""
+    variables = engine.get_variables(execution_id)
+    return {"variables": variables}
+
+
 @executions_router.get("", response_model=ExecutionListResponse)
 async def get_executions(
     script_id: Optional[str] = Query(None, description="篩選腳本 ID"),

@@ -14,7 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
 from .api.deps import init_db
-from .api.routes import scripts, execution, capture, system
+from .api.routes import scripts, execution, capture, system, ws, schedule, recorder, folders
+from .core.scheduler import scheduler
 
 
 @asynccontextmanager
@@ -29,7 +30,14 @@ async def lifespan(app: FastAPI):
     await init_db()
     print("[+] Database initialized")
     
+    # 啟動排程器
+    scheduler.start()
+    print("[+] Scheduler started")
+    
     yield
+    
+    # 停止排程器
+    scheduler.stop()
     
     # 關閉時
     print("[*] Application shutdown")
@@ -60,6 +68,10 @@ app.include_router(scripts.router, prefix=settings.api_prefix)
 app.include_router(execution.router, prefix=settings.api_prefix)
 app.include_router(execution.executions_router, prefix=settings.api_prefix)
 app.include_router(capture.router, prefix=settings.api_prefix)
+app.include_router(ws.router, prefix=settings.api_prefix)
+app.include_router(schedule.router, prefix=settings.api_prefix)
+app.include_router(recorder.router, prefix=settings.api_prefix)
+app.include_router(folders.router, prefix=settings.api_prefix)
 
 
 @app.get("/")

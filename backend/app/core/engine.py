@@ -20,6 +20,7 @@ from enum import Enum
 from .blocks import BlockRegistry, BlockInstance, ExecutionContext
 from .image_finder import image_finder
 from .config import settings
+from .websocket import ws_manager
 
 
 class ExecutionStatus(str, Enum):
@@ -37,7 +38,7 @@ class ExecutionProgress:
     """執行進度"""
     current_step: int = 0
     total_steps: int = 0
-    current_block_id: Optional[str] = None
+    current_block_id: Optional[str] = None  # Block instance_id for UI highlighting
 
 
 @dataclass
@@ -103,9 +104,17 @@ class ScriptExecution:
         self.finished_at: Optional[datetime] = None
         self.error: Optional[str] = None
         
+        # 當前執行的 block instance_id（用於 UI 高亮）
+        self._current_block_instance_id: Optional[str] = None
+        
         # 控制
         self._pause_event = asyncio.Event()
         self._pause_event.set()  # 初始為非暫停狀態
+        
+        # 除錯模式
+        self._debug_mode: bool = False
+        self._breakpoints: set = set()  # Block instance_id 集合
+        self._step_mode: bool = False  # 逐步執行模式
         
     def _count_steps(self, blocks: List[BlockInstance]) -> int:
         """計算總步數"""
@@ -124,6 +133,16 @@ class ScriptExecution:
         self.started_at = datetime.now()
         self.context.log(f"開始執行腳本: {self.script_name}")
         
+        # 發送開始事件
+        asyncio.create_task(ws_manager.send_execution_update(
+            execution_id=self.execution_id,
+            status=self.status.value,
+            progress={
+                "current_step": 0,
+                "total_steps": self.context.total_steps,
+            },
+        ))
+        
         try:
             await self._execute_blocks(self.blocks)
             
@@ -140,6 +159,19 @@ class ScriptExecution:
             self.context.log(f"腳本執行失敗: {e}", level="error")
         finally:
             self.finished_at = datetime.now()
+            self._current_block_instance_id = None
+            
+            # 發送完成事件
+            asyncio.create_task(ws_manager.send_execution_update(
+                execution_id=self.execution_id,
+                status=self.status.value,
+                progress={
+                    "current_step": self.context.current_step,
+                    "total_steps": self.context.total_steps,
+                },
+                error=self.error,
+                logs=self.context.logs,
+            ))
         
         return self._get_result()
     
@@ -162,6 +194,35 @@ class ScriptExecution:
     async def _execute_block(self, block: BlockInstance) -> Any:
         """執行單一 Block"""
         self.context.current_step += 1
+        
+        # 追蹤當前執行的 block（用於 UI 高亮）
+        self._current_block_instance_id = block.instance_id
+        
+        # 檢查斷點
+        if self._debug_mode and block.instance_id in self._breakpoints:
+            self.context.log(f"命中斷點: {block.instance_id}")
+            self.status = ExecutionStatus.PAUSED
+            self._pause_event.clear()
+        
+        # 單步執行模式下，每步都暫停
+        if self._step_mode:
+            self._step_mode = False
+            self.status = ExecutionStatus.PAUSED
+            self._pause_event.clear()
+        
+        # 發送 WebSocket 更新
+        asyncio.create_task(ws_manager.send_execution_update(
+            execution_id=self.execution_id,
+            status=self.status.value,
+            progress={
+                "current_step": self.context.current_step,
+                "total_steps": self.context.total_steps,
+            },
+            current_block_id=block.instance_id,
+        ))
+        
+        # 等待如果暫停
+        await self._pause_event.wait()
         
         # 取得執行器
         executor = BlockRegistry.get_executor(block.id)
@@ -260,6 +321,46 @@ class ScriptExecution:
                 # 實際會在 ScriptEngine.execute_block 中處理
                 pass
         
+        elif block.id in ("file_exists", "if_ocr_text_exists"):
+            if result.get("execute_children") and block.children:
+                await self._execute_blocks(block.children)
+            elif result.get("execute_else") and block.else_children:
+                await self._execute_blocks(block.else_children)
+        
+        elif block.id == "try_catch":
+            # Try-Catch 錯誤處理
+            try:
+                if block.children:
+                    await self._execute_blocks(block.children)
+            except Exception as e:
+                self.context.log(f"捕獲錯誤: {e}", level="warning")
+                # 設定錯誤變數
+                self.context.set_variable("_error", str(e))
+                self.context.set_variable("_error_type", type(e).__name__)
+                # 執行 catch 區塊
+                if block.else_children:
+                    await self._execute_blocks(block.else_children)
+        
+        elif block.id == "for_each":
+            list_value = result.get("list", [])
+            variable_name = result.get("variable_name", "item")
+            
+            for i, item in enumerate(list_value):
+                if self.context.should_stop or self.context.should_break:
+                    break
+                
+                self.context.set_variable(variable_name, item)
+                self.context.set_variable("_loop_index", i)
+                self.context.log(f"遍歷第 {i + 1}/{len(list_value)} 項: {item}")
+                
+                await self._execute_blocks(block.children)
+                
+                if self.context.should_continue:
+                    self.context.should_continue = False
+                    continue
+            
+            self.context.should_break = False
+        
         return result
     
     def stop(self) -> bool:
@@ -281,10 +382,32 @@ class ScriptExecution:
         """繼續執行"""
         if self.status == ExecutionStatus.PAUSED:
             self.status = ExecutionStatus.RUNNING
+            self._step_mode = False
             self._pause_event.set()
             self.context.log("腳本繼續執行")
             return True
         return False
+    
+    def step(self) -> bool:
+        """單步執行"""
+        if self.status == ExecutionStatus.PAUSED:
+            self._step_mode = True
+            self._pause_event.set()
+            self.context.log("單步執行")
+            return True
+        return False
+    
+    def set_breakpoint(self, block_instance_id: str) -> None:
+        """設置斷點"""
+        self._breakpoints.add(block_instance_id)
+    
+    def remove_breakpoint(self, block_instance_id: str) -> None:
+        """移除斷點"""
+        self._breakpoints.discard(block_instance_id)
+    
+    def set_debug_mode(self, enabled: bool) -> None:
+        """設置除錯模式"""
+        self._debug_mode = enabled
     
     def _get_result(self) -> ExecutionResult:
         """取得執行結果"""
@@ -296,6 +419,7 @@ class ScriptExecution:
             progress=ExecutionProgress(
                 current_step=self.context.current_step,
                 total_steps=self.context.total_steps,
+                current_block_id=self._current_block_instance_id,
             ),
             started_at=self.started_at,
             finished_at=self.finished_at,
@@ -446,6 +570,44 @@ class ScriptEngine:
         if execution:
             return execution.resume()
         return False
+    
+    def step(self, execution_id: str) -> bool:
+        """單步執行"""
+        execution = self._executions.get(execution_id)
+        if execution:
+            return execution.step()
+        return False
+    
+    def set_breakpoint(self, execution_id: str, block_instance_id: str) -> bool:
+        """設置斷點"""
+        execution = self._executions.get(execution_id)
+        if execution:
+            execution.set_breakpoint(block_instance_id)
+            return True
+        return False
+    
+    def remove_breakpoint(self, execution_id: str, block_instance_id: str) -> bool:
+        """移除斷點"""
+        execution = self._executions.get(execution_id)
+        if execution:
+            execution.remove_breakpoint(block_instance_id)
+            return True
+        return False
+    
+    def set_debug_mode(self, execution_id: str, enabled: bool) -> bool:
+        """設置除錯模式"""
+        execution = self._executions.get(execution_id)
+        if execution:
+            execution.set_debug_mode(enabled)
+            return True
+        return False
+    
+    def get_variables(self, execution_id: str) -> Dict[str, Any]:
+        """取得執行變數"""
+        execution = self._executions.get(execution_id)
+        if execution:
+            return execution.context.variables
+        return {}
     
     def get_status(self, execution_id: str) -> Optional[ExecutionResult]:
         """取得執行狀態"""
